@@ -329,8 +329,8 @@ class RTree<T, S : Geometry> private constructor(
     }
 
     /**
-     * If the RTree has no entries returns [Optional.empty] otherwise returns
-     * the minimum bounding rectangle of all entries in the RTree.
+     * If the RTree has no entries returns null
+     * otherwise returns the minimum bounding rectangle of all entries in the RTree.
      *
      * @return minimum bounding rectangle of all entries in RTree
      */

@@ -1,7 +1,7 @@
 package ksn
 
-import ksn.Constants.Companion.GRID_WIDTH
 import androidx.compose.ui.geometry.Offset
+import ksn.Constants.Companion.GRID_WIDTH
 import ksn.model.Point
 import ksn.model.shape.Line
 import ksn.model.shape.Rect

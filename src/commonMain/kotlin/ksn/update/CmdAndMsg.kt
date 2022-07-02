@@ -1,4 +1,4 @@
 package ksn.update
 
-sealed class Cmd
-sealed class Msg
+sealed interface Cmd
+sealed interface Msg

@@ -90,7 +90,7 @@ class Ascii(
     }
 
     private fun List<Point>.toBoundingPointsList(): List<BoundingPoints> =
-        this.mapIndexed { index, _ ->
+        List(this.size) { index ->
             val a = index - 1
             val b = index + 2
             when {

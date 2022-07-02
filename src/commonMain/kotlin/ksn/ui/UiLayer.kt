@@ -1,6 +1,5 @@
 package ksn.ui
 
-import ksn.ModelElement
 import androidx.compose.foundation.gestures.detectDragGestures
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.collectAsState
@@ -13,6 +12,7 @@ import androidx.compose.ui.unit.Dp
 import elm.Element
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.combineTransform
+import ksn.ModelElement
 import ksn.model.Tool
 import ksn.model.shape.toSkiaRect
 import ksn.update.AppModel
@@ -60,7 +60,7 @@ fun UiLayer(width: Dp, scale: Float) {
                     paint.pathEffect = PathEffect.makeDash(floatArrayOf(5f, 5f), 0f)
                     drawRect(dragStatus.toRect(), paint)
                 } else {
-                    paint.color = 0xFFFF0000.toInt()
+                    paint.color = 0xFF0000FF.toInt()
                     paint.mode = PaintMode.STROKE
                     shapes.forEach { shape ->
                         drawRect(shape.toSkiaRect(), paint)

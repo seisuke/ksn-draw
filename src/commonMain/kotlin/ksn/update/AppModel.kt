@@ -23,12 +23,12 @@ data class AppModel(
     ),
     val typeface: Typeface? = null,
 ) {
-    data class CurrentTool(val tool: Tool): Msg()
-    object StartLoadFont: Msg()
-    data class LoadFontResult(val typeface: Typeface): Msg()
-    data class ExportClipBoard(val clipBoard: ClipboardManager): Msg()
+    data class CurrentTool(val tool: Tool): Msg
+    object StartLoadFont: Msg
+    data class LoadFontResult(val typeface: Typeface): Msg
+    data class ExportClipBoard(val clipBoard: ClipboardManager): Msg
 
-    object LoadFont: Cmd()
+    object LoadFont: Cmd
 
     /**
      * Mutable method. Returns list of [AppModel.shapes] plus [shape]

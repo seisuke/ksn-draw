@@ -32,4 +32,3 @@ fun CanvasView() {
         AsciiLayer(width, scale, ascii)
     }
 }
-
