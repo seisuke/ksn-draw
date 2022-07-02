@@ -26,16 +26,14 @@ fun toolButton(
         checked = checked,
         onCheckedChange = {
             if (it) {
-                element.accept(
-                    AppModel.CurrentTool(tool)
-                )
-                if (tool is Tool.Export) {
-                    element.accept(
-                        AppModel.ExportClipBoard(
-                            clipboardManager
-                        )
+                val msg = if (tool is Tool.Export) {
+                    AppModel.ExportClipBoard(
+                        clipboardManager
                     )
+                } else {
+                    AppModel.CurrentTool(tool)
                 }
+                element.accept(msg)
             }
         }
     ) {

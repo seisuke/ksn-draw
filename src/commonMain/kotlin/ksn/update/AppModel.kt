@@ -1,5 +1,6 @@
 package ksn.update
 
+import androidx.compose.material.SnackbarHostState
 import androidx.compose.ui.platform.ClipboardManager
 import androidx.compose.ui.text.AnnotatedString
 import kotlinx.atomicfu.AtomicLong
@@ -22,13 +23,16 @@ data class AppModel(
         emptyList()
     ),
     val typeface: Typeface? = null,
+    val snackbarHostState: SnackbarHostState = SnackbarHostState()
 ) {
     data class CurrentTool(val tool: Tool): Msg
     object StartLoadFont: Msg
     data class LoadFontResult(val typeface: Typeface): Msg
     data class ExportClipBoard(val clipBoard: ClipboardManager): Msg
+    data class ShowSnackBar(val message: String): Msg
 
     object LoadFont: Cmd
+    data class ShowSnackBarCmd(val message: String, val snackbarHostState: SnackbarHostState): Cmd
 
     /**
      * Mutable method. Returns list of [AppModel.shapes] plus [shape]
