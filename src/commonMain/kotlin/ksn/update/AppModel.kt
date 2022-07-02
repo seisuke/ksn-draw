@@ -1,6 +1,11 @@
 package ksn.update
 
+import androidx.compose.ui.platform.ClipboardManager
+import androidx.compose.ui.text.AnnotatedString
 import kotlinx.atomicfu.AtomicLong
+import ksn.ascii.Ascii
+import ksn.ascii.AsciiChar
+import ksn.ascii.Matrix
 import ksn.model.Tool
 import ksn.model.shape.Shape
 import org.jetbrains.skia.Typeface
@@ -18,10 +23,10 @@ data class AppModel(
     ),
     val typeface: Typeface? = null,
 ) {
-
     data class CurrentTool(val tool: Tool): Msg()
     object StartLoadFont: Msg()
     data class LoadFontResult(val typeface: Typeface): Msg()
+    data class ExportClipBoard(val clipBoard: ClipboardManager): Msg()
 
     object LoadFont: Cmd()
 
@@ -40,5 +45,21 @@ data class AppModel(
         return shapes.filter { shape ->
             selectShapeIdList.contains(shape.id)
         }
+    }
+
+    fun exportClipBoard(clipBoard: ClipboardManager) {
+        val maxRectangle = this.rtree.mbr() ?: return
+        val ascii = Ascii(
+            Matrix.init(
+                maxRectangle.x2 + 1,
+                maxRectangle.y2 + 1,
+                AsciiChar.Char(Ascii.SPACE)
+            )
+        )
+        ascii.mergeToMatrix(this.shapes)
+        val output = ascii.render(AsciiChar::value).joinToString(separator = "\n")
+        clipBoard.setText(
+            AnnotatedString(output)
+        )
     }
 }

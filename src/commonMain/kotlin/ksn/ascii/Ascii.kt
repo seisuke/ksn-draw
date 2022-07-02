@@ -4,6 +4,7 @@ import ksn.model.Point
 import ksn.model.minus
 import ksn.model.shape.Line
 import ksn.model.shape.Rect
+import ksn.model.shape.Shape
 import kotlin.math.ceil
 
 class Ascii(
@@ -13,7 +14,17 @@ class Ascii(
         transform: (AsciiChar) -> String
     ): List<String> = matrix.joinToString(transform = transform)
 
-    fun Rect.toAsciiMatrix(): Matrix<AsciiChar> {
+    fun mergeToMatrix(shapes: List<Shape>) {
+        shapes.forEach { shape ->
+            val partAscii = when (shape) {
+                is Rect -> shape.toAsciiMatrix()
+                is Line -> shape.toAsciiMatrix()
+            }
+            matrix.merge(partAscii, shape.left, shape.top)
+        }
+    }
+
+    private fun Rect.toAsciiMatrix(): Matrix<AsciiChar> {
         val matrix = Matrix.init<AsciiChar>(width, height, AsciiChar.Char(SPACE))
         this.toPointList()
             .toBoundingPointsList()
@@ -43,7 +54,7 @@ class Ascii(
         )
     }
 
-    fun Line.toAsciiMatrix(): Matrix<AsciiChar> {
+    private fun Line.toAsciiMatrix(): Matrix<AsciiChar> {
         val matrix = Matrix.init<AsciiChar>(width, height, AsciiChar.Char(SPACE))
         val split = ceil(width / 2f).toInt() - 1
 

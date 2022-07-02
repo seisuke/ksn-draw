@@ -6,7 +6,7 @@ import kotlin.math.max
 import kotlin.math.min
 import org.jetbrains.skia.Rect as SkiaRect
 
-interface Shape {
+sealed interface Shape {
     val id: Long
     val left: Int
     val top: Int

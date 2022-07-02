@@ -1,15 +1,13 @@
 package ksn.ui
 
-import ksn.ModelElement
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
 import androidx.compose.ui.graphics.NativeCanvas
 import androidx.compose.ui.graphics.nativeCanvas
 import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.dp
+import ksn.ModelElement
 import ksn.ascii.Ascii
-import ksn.model.shape.Line
-import ksn.model.shape.Rect
 import ksn.update.AppModel
 import org.jetbrains.skia.Font
 import org.jetbrains.skia.Paint
@@ -27,18 +25,7 @@ fun AsciiLayer(
     val typeface by element.mapAsState(AppModel::typeface)
 
     ascii.matrix.clear()
-    shapes.forEach { shape ->
-        when (shape) {
-            is Rect -> ascii.apply {
-                val partAscii = shape.toAsciiMatrix()
-                matrix.merge(partAscii, shape.left, shape.top)
-            }
-            is Line -> ascii.apply {
-                val partAscii = shape.toAsciiMatrix()
-                matrix.merge(partAscii, shape.left, shape.top)
-            }
-        }
-    }
+    ascii.mergeToMatrix(shapes)
 
     Layer(
         width * scale,
