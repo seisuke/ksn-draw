@@ -1,6 +1,5 @@
 package ksn.ui
 
-import ksn.ModelElement
 import androidx.compose.animation.animateColorAsState
 import androidx.compose.material.Icon
 import androidx.compose.material.IconToggleButton
@@ -10,15 +9,18 @@ import androidx.compose.material.icons.filled.Favorite
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
 import androidx.compose.ui.graphics.Color
-import ksn.update.AppModel
+import androidx.compose.ui.platform.LocalClipboardManager
+import ksn.ModelElement
 import ksn.model.Tool
+import ksn.update.AppModel
 
 @Composable
-fun operationButton(
+fun toolButton(
     tool: Tool
 ) {
     val element = ModelElement.current
     val checked by element.mapAsState { model -> model.tool == tool }
+    val clipboardManager = LocalClipboardManager.current
 
     IconToggleButton(
         checked = checked,
@@ -27,6 +29,13 @@ fun operationButton(
                 element.accept(
                     AppModel.CurrentTool(tool)
                 )
+                if (tool is Tool.Export) {
+                    element.accept(
+                        AppModel.ExportClipBoard(
+                            clipboardManager
+                        )
+                    )
+                }
             }
         }
     ) {

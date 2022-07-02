@@ -18,7 +18,7 @@ import androidx.compose.ui.unit.dp
 import elm.Element
 import kotlinx.atomicfu.atomic
 import ksn.model.Tool
-import ksn.ui.operationButton
+import ksn.ui.toolButton
 import ksn.update.AppModel
 import ksn.update.AppModelUpdate
 import ksn.update.Msg
@@ -61,11 +61,11 @@ fun mainView() {
         val element = ModelElement.current
         val typeface by element.mapAsState(AppModel::typeface)
         Row {
-            operationButton(Tool.Select)
-            operationButton(Tool.Rect)
-            operationButton(Tool.Text)
-            operationButton(Tool.Line)
-            operationButton(Tool.Export)
+            toolButton(Tool.Select)
+            toolButton(Tool.Rect)
+            toolButton(Tool.Text)
+            toolButton(Tool.Line)
+            toolButton(Tool.Export)
         }
 
         Spacer(modifier = Modifier.height(20.dp))

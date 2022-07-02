@@ -31,7 +31,7 @@ fun AsciiLayer(
         width * scale,
         width * 2 * scale,
     ) { paint ->
-        paint.color = 0xFF0000FF.toInt()
+        paint.color = 0xFF000000.toInt()
         val loadedTypeface = typeface ?: return@Layer
         drawAscii(
             nativeCanvas,

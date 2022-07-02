@@ -1,16 +1,11 @@
 package ksn.update
 
-import androidx.compose.ui.platform.ClipboardManager
-import androidx.compose.ui.text.AnnotatedString
 import elm.None
 import elm.Sub
 import elm.Update
 import elm.plus
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.flow
-import ksn.ascii.Ascii
-import ksn.ascii.AsciiChar
-import ksn.ascii.Matrix
 import ksn.update.DragStatus.Companion.handleDragEnd
 import ksn.loadTypeface
 import ksn.model.Tool
@@ -25,7 +20,7 @@ class AppModelUpdate : Update<AppModel, Msg, Cmd> {
             model.copy(tool = Tool.Select) + None
         }
         is DragStatus.DragEnd -> handleDragEnd(model, msg)
-        //else -> model + None //sometimes build output say "add necessary 'else' branch" why?
+        //else -> model + None //sometimes error says "add necessary 'else' branch" in build why?
     }
 
     override fun call(cmd: Cmd): Flow<Msg> = flow {

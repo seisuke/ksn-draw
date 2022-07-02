@@ -14,7 +14,7 @@ fun GridLayer(width: Dp, scale: Float) {
         width * scale,
         width * 2 * scale,
     ) { paint ->
-        paint.color = 0xFF000000.toInt()
+        paint.color = 0x88000000.toInt()
         drawGrid(nativeCanvas, paint, width.value, scale)
     }
 }

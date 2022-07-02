@@ -15,7 +15,7 @@ data class DragStatus(
     val start: Offset,
     val end: Offset,
 ) {
-    data class DragEnd(val dragStatus: DragStatus): Msg()
+    data class DragEnd(val dragStatus: DragStatus): Msg
 
     companion object {
         val Zero = DragStatus(
