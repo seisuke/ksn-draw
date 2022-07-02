@@ -6,9 +6,8 @@ import elm.Update
 import elm.plus
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.flow
-import ksn.update.DragStatus.Companion.handleDragEnd
 import ksn.loadTypeface
-import ksn.model.Tool
+import ksn.update.DragStatus.Companion.handleDragEnd
 
 class AppModelUpdate : Update<AppModel, Msg, Cmd> {
     override fun update(msg: Msg, model: AppModel): Sub<AppModel, Cmd> = when (msg) {
@@ -17,8 +16,9 @@ class AppModelUpdate : Update<AppModel, Msg, Cmd> {
         is AppModel.LoadFontResult -> model.copy(typeface = msg.typeface) + None
         is AppModel.ExportClipBoard -> {
             model.exportClipBoard(msg.clipBoard)
-            model.copy(tool = Tool.Select) + None
+            model + AppModel.ShowSnackBarCmd("export ascii", model.snackbarHostState)
         }
+        is AppModel.ShowSnackBar -> model + AppModel.ShowSnackBarCmd(msg.message, model.snackbarHostState)
         is DragStatus.DragEnd -> handleDragEnd(model, msg)
         //else -> model + None //sometimes error says "add necessary 'else' branch" in build why?
     }
@@ -30,6 +30,9 @@ class AppModelUpdate : Update<AppModel, Msg, Cmd> {
                 emit(
                     AppModel.LoadFontResult(typeface)
                 )
+            }
+            is AppModel.ShowSnackBarCmd -> {
+                cmd.snackbarHostState.showSnackbar(cmd.message)
             }
         }
     }

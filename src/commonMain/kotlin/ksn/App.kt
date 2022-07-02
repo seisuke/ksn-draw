@@ -1,23 +1,32 @@
 package ksn
 
-import ksn.ui.CanvasView
+import androidx.compose.foundation.layout.Arrangement
+import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.BoxScope
 import androidx.compose.foundation.layout.Column
-import androidx.compose.foundation.layout.ColumnScope
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
+import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.height
+import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.layout.wrapContentSize
+import androidx.compose.material.Card
+import androidx.compose.material.MaterialTheme
+import androidx.compose.material.SnackbarHost
+import androidx.compose.material.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.CompositionLocalProvider
 import androidx.compose.runtime.compositionLocalOf
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.rememberCoroutineScope
+import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.dp
 import elm.Element
 import kotlinx.atomicfu.atomic
 import ksn.model.Tool
+import ksn.ui.CanvasView
 import ksn.ui.toolButton
 import ksn.update.AppModel
 import ksn.update.AppModelUpdate
@@ -31,7 +40,7 @@ val ModelElement = compositionLocalOf<Element<AppModel, Msg>> {
 @Composable
 fun App(
     //requestWindowSize: ((width: Dp, height: Dp) -> Unit)? = null
-) = MainLayout {
+) {
 
     val appModelElement = Element.create(
         AppModel(
@@ -51,28 +60,49 @@ fun App(
 }
 
 @Composable
-private fun MainLayout(block:@Composable ColumnScope.() -> Unit) {
-    Column { block() }
-}
-
-@Composable
 fun mainView() {
-    Column {
-        val element = ModelElement.current
-        val typeface by element.mapAsState(AppModel::typeface)
-        Row {
-            toolButton(Tool.Select)
-            toolButton(Tool.Rect)
-            toolButton(Tool.Text)
-            toolButton(Tool.Line)
-            toolButton(Tool.Export)
+
+    val element = ModelElement.current
+    val typeface by element.mapAsState(AppModel::typeface)
+    val snackbarHostState by element.mapAsState(AppModel::snackbarHostState)
+    Box (
+        modifier = Modifier.fillMaxSize()
+    ){
+        SnackbarHost(
+            hostState = snackbarHostState,
+            modifier = Modifier.align(Alignment.BottomEnd)
+        ) { snackbarData ->
+            Card(
+                shape = MaterialTheme.shapes.small,
+                modifier = Modifier
+                    .padding(16.dp)
+                    .wrapContentSize()
+            ) {
+                Column(
+                    modifier = Modifier.padding(16.dp),
+                    verticalArrangement = Arrangement.spacedBy(4.dp),
+                    horizontalAlignment = Alignment.CenterHorizontally
+                ) {
+                    Text(text = snackbarData.message)
+                }
+            }
         }
 
-        Spacer(modifier = Modifier.height(20.dp))
+        Column {
+            Row {
+                toolButton(Tool.Select)
+                toolButton(Tool.Rect)
+                toolButton(Tool.Text)
+                toolButton(Tool.Line)
+                toolButton(Tool.Export)
+            }
 
-        CanvasView()
-        if (typeface == null) {
-            element.accept(AppModel.StartLoadFont)
+            Spacer(modifier = Modifier.height(20.dp))
+
+            CanvasView()
+            if (typeface == null) {
+                element.accept(AppModel.StartLoadFont)
+            }
         }
     }
 }
