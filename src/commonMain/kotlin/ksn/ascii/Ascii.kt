@@ -24,7 +24,7 @@ class Ascii(
         }
     }
 
-    private fun Rect.toAsciiMatrix(): Matrix<AsciiChar> {
+    fun Rect.toAsciiMatrix(): Matrix<AsciiChar> {
         val matrix = Matrix.init<AsciiChar>(width, height, AsciiChar.Char(SPACE))
         this.toPointList()
             .toBoundingPointsList()
@@ -54,7 +54,7 @@ class Ascii(
         )
     }
 
-    private fun Line.toAsciiMatrix(): Matrix<AsciiChar> {
+    fun Line.toAsciiMatrix(): Matrix<AsciiChar> {
         val matrix = Matrix.init<AsciiChar>(width, height, AsciiChar.Char(SPACE))
         val split = ceil(width / 2f).toInt() - 1
 

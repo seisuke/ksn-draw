@@ -5,7 +5,6 @@ import ksn.model.shape.Line
 import kotlin.test.Test
 import kotlin.test.assertEquals
 
-
 class AsciiTest {
     @Test
     fun lineMatrix1() {

@@ -71,13 +71,13 @@ class RTreeTest {
         )
 
         val result1 = tree.search(Rectangle(1, 1, 1, 1)).toList()
-        assertEquals(result1.map { it.value() }, listOf(1, 3))
+        assertEquals(result1.map { it.value }, listOf(1, 3))
 
         val result2 = tree.search(Rectangle(4, 4, 7, 7)).toList()
-        assertEquals(result2.map { it.value() }, listOf(3))
+        assertEquals(result2.map { it.value }, listOf(3))
 
         val result3 = tree.search(Rectangle(0, 0, 5, 5)).toList()
-        assertEquals(result3.map { it.value() }, listOf(1, 2, 3))
+        assertEquals(result3.map { it.value }, listOf(1, 2, 3))
     }
 
     @Test
@@ -107,9 +107,7 @@ class RTreeTest {
         println(milliSeconds)
     }
 
-    private fun point(n: Int): PointEntry {
-        return PointEntry(n,Point(n, n))
-    }
+    private fun point(n: Int) = Entry(n,Point(n, n))
 
     private fun rectangle(
         n: Int,
@@ -117,29 +115,9 @@ class RTreeTest {
         y1: Int,
         x2: Int,
         y2: Int,
-    ): RectangleEntry {
-        return RectangleEntry(
-            n,
-            Rectangle(
-                x1, y1, x2, y2
-            )
-        )
-    }
-
-    data class PointEntry(
-        val v: Int,
-        val p: Point,
-    ): Entry<Int, Point> {
-        override fun value() = v
-        override fun geometry() = p
-    }
-
-    data class RectangleEntry(
-        val v: Int,
-        val rectangle: Rectangle,
-    ): Entry<Int, Rectangle> {
-        override fun value() = v
-        override fun geometry() = rectangle
-    }
+    ) = Entry(
+        n,
+        Rectangle(x1, y1, x2, y2)
+    )
 
 }
