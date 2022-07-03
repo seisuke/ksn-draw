@@ -9,6 +9,7 @@ import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.layout.wrapContentSize
 import androidx.compose.material.Card
 import androidx.compose.material.MaterialTheme
@@ -89,11 +90,17 @@ fun mainView() {
         }
 
         Column {
-            Row {
+            Row (
+                modifier = Modifier.padding(16.dp)
+            ){
                 toolButton(Tool.Select)
+                Spacer(Modifier.width(16.dp))
                 toolButton(Tool.Rect)
+                Spacer(Modifier.width(16.dp))
                 toolButton(Tool.Text)
+                Spacer(Modifier.width(16.dp))
                 toolButton(Tool.Line)
+                Spacer(Modifier.width(16.dp))
                 toolButton(Tool.Export)
             }
 

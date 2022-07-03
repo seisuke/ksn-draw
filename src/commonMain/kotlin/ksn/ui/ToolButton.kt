@@ -1,15 +1,19 @@
 package ksn.ui
 
 import androidx.compose.animation.animateColorAsState
+import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.size
+import androidx.compose.foundation.layout.wrapContentWidth
 import androidx.compose.material.Icon
 import androidx.compose.material.IconToggleButton
 import androidx.compose.material.Text
-import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.filled.Favorite
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
+import androidx.compose.ui.Alignment
+import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.platform.LocalClipboardManager
+import androidx.compose.ui.unit.dp
 import ksn.ModelElement
 import ksn.model.Tool
 import ksn.update.AppModel
@@ -44,13 +48,19 @@ fun toolButton(
                 Color(0xFFB0BEC5)
             }
         )
-        
-        Icon(
-            Icons.Filled.Favorite,
-            contentDescription = null,
-            tint = tint
-        )
 
-        Text(text = tool.label)
+        Column (
+            modifier = Modifier.wrapContentWidth(),
+            horizontalAlignment = Alignment.CenterHorizontally,
+        ){
+            Icon(
+                tool.icon,
+                contentDescription = null,
+                tint = tint,
+                modifier = Modifier.size(32.dp)
+            )
+
+            Text(text = tool.label)
+        }
     }
 }

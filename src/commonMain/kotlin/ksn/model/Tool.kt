@@ -1,9 +1,17 @@
 package ksn.model
 
-sealed class Tool(val label: String) {
-    object Select : Tool("Select")
-    object Rect : Tool("Rect")
-    object Text : Tool("Text")
-    object Line : Tool("Line")
-    object Export : Tool("Export")
+import androidx.compose.material.icons.Icons
+import androidx.compose.ui.graphics.vector.ImageVector
+import ksn.ui.icons.Export
+import ksn.ui.icons.Line
+import ksn.ui.icons.Rect
+import ksn.ui.icons.Select
+import ksn.ui.icons.Text
+
+sealed class Tool(val label: String, val icon: ImageVector) {
+    object Select : Tool("Select",  Icons.Outlined.Select)
+    object Rect : Tool("Rect",  Icons.Outlined.Rect)
+    object Text : Tool("Text",  Icons.Outlined.Text)
+    object Line : Tool("Line",  Icons.Outlined.Line)
+    object Export : Tool("Export",  Icons.Outlined.Export)
 }
