@@ -7,7 +7,7 @@ import elm.plus
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.flow
 import ksn.loadTypeface
-import ksn.update.DragStatus.Companion.handleDragEnd
+import ksn.update.IntDragStatus.Companion.handleDragEnd
 
 class AppModelUpdate : Update<AppModel, Msg, Cmd> {
     override fun update(msg: Msg, model: AppModel): Sub<AppModel, Cmd> = when (msg) {
@@ -19,7 +19,8 @@ class AppModelUpdate : Update<AppModel, Msg, Cmd> {
             model + AppModel.ShowSnackBarCmd("export ascii", model.snackbarHostState)
         }
         is AppModel.ShowSnackBar -> model + AppModel.ShowSnackBarCmd(msg.message, model.snackbarHostState)
-        is DragStatus.DragEnd -> handleDragEnd(model, msg)
+
+        is IntDragStatus.DragEnd -> handleDragEnd(model, msg)
         //else -> model + None //sometimes error says "add necessary 'else' branch" in build why?
     }
 

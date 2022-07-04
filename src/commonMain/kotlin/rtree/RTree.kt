@@ -144,18 +144,6 @@ class RTree<T, S : Geometry> private constructor(
         )
     }
     /**
-     * Deletes one or all matching entries depending on the value of
-     * `all`. If multiple copies of the entry are in the R-tree only one
-     * will be deleted if all is false otherwise all matching entries will be
-     * deleted. The entry must match on both value and geometry to be deleted.
-     *
-     * @param entry
-     * the [Entry] to be deleted
-     * @param all
-     * if true deletes all matches otherwise deletes first found
-     * @return a new immutable R-tree without one instance of the specified entry
-     */
-    /**
      * Deletes one entry if it exists, returning an immutable copy of the RTree
      * without that entry. If multiple copies of the entry are in the R-tree only
      * one will be deleted. The entry must match on both value and geometry to be

@@ -14,13 +14,14 @@ import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.combineTransform
 import ksn.ModelElement
 import ksn.model.Tool
-import ksn.model.shape.toSkiaRect
+import ksn.toIntDragStatus
+import ksn.toSkiaRect
 import ksn.update.AppModel
 import ksn.update.DragStatus
+import ksn.update.IntDragStatus
 import ksn.update.Msg
 import org.jetbrains.skia.PaintMode
 import org.jetbrains.skia.PathEffect
-import org.jetbrains.skia.Rect
 
 @Composable
 fun UiLayer(width: Dp, scale: Float) {
@@ -58,7 +59,7 @@ fun UiLayer(width: Dp, scale: Float) {
                     paint.mode = PaintMode.STROKE
                     paint.strokeWidth = 2f
                     paint.pathEffect = PathEffect.makeDash(floatArrayOf(5f, 5f), 0f)
-                    drawRect(dragStatus.toRect(), paint)
+                    drawRect(dragStatus.toSkiaRect(), paint)
                 } else {
                     paint.color = 0xFF0000FF.toInt()
                     paint.mode = PaintMode.STROKE
@@ -69,20 +70,6 @@ fun UiLayer(width: Dp, scale: Float) {
             }
         }
     }
-}
-
-private fun DragStatus.toRect(): Rect {
-    val (left, right) = if (start.x < end.x) {
-        start.x to end.x
-    } else {
-        end.x to start.x
-    }
-    val (top, bottom) = if (start.y < end.y) {
-        start.y to end.y
-    } else {
-        end.y to start.y
-    }
-    return Rect(left, top, right, bottom)
 }
 
 private suspend fun PointerInputScope.createDetectDragGesture(
@@ -97,13 +84,14 @@ private suspend fun PointerInputScope.createDetectDragGesture(
         onDrag = { change, dragAmount ->
             change.consume()
             val oldDragStatus = dragStatusFlow.value
-            dragStatusFlow.value = oldDragStatus.copy(
+            val newDragStatus = oldDragStatus.copy(
                 end = oldDragStatus.end + dragAmount / scale
             )
+            dragStatusFlow.value = newDragStatus
         },
         onDragEnd = {
             element.accept(
-                DragStatus.DragEnd(dragStatusFlow.value)
+                IntDragStatus.DragEnd(dragStatusFlow.value.toIntDragStatus())
             )
             dragStatusFlow.value = DragStatus.Zero
         },

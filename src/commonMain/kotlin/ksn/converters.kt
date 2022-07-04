@@ -2,37 +2,85 @@ package ksn
 
 import androidx.compose.ui.geometry.Offset
 import ksn.Constants.Companion.GRID_WIDTH
+import ksn.model.DataRect
 import ksn.model.Point
 import ksn.model.shape.Line
 import ksn.model.shape.Rect
+import ksn.model.shape.Shape
 import ksn.update.DragStatus
+import ksn.update.IntDragStatus
+import org.jetbrains.skia.Rect as SkiaRect
+import rtree.Rectangle as RTreeRectangle
 
-fun DragStatus.toKsnRect(id: Long): Rect {
-    val (left, right) = if (start.x < end.x) {
-        start.x to end.x
-    } else {
-        end.x to start.x
-    }
-    val (top, bottom) = if (start.y < end.y) {
-        start.y to end.y
-    } else {
-        end.y to start.y
-    }
-    return Rect(
-        id,
-        left.toKsnUnit(),
-        (top / 2).toKsnUnit(),
-        right.toKsnUnit(),
-        (bottom / 2).toKsnUnit()
+fun DragStatus.toIntDragStatus() = IntDragStatus(
+    start.toKsnPoint(),
+    end.toKsnPoint(),
+)
+
+fun IntDragStatus.toDataRect(): DataRect {
+    val (left, right) = orderedPair(start.x, end.x)
+    val (top, bottom) = orderedPair(start.y, end.y)
+    return DataRect(
+        left,
+        top,
+        right,
+        bottom
     )
 }
 
-fun DragStatus.toKsnLine(id: Long): Line {
+fun IntDragStatus.toRTreeRectangle(): RTreeRectangle {
+    val (left, top, right ,bottom) = toDataRect()
+    return RTreeRectangle(
+        left,
+        top,
+        right,
+        bottom
+    )
+}
+
+fun IntDragStatus.toKsnRect(id: Long): Rect {
+    val (left, top, right ,bottom) = toDataRect()
+    return Rect(
+        id,
+        left,
+        top,
+        right,
+        bottom
+    )
+}
+
+fun IntDragStatus.toKsnLine(id: Long): Line {
     return Line(
         id,
-        start.toKsnPoint(),
-        end.toKsnPoint()
+        start,
+        end
     )
+}
+
+fun DragStatus.toSkiaRect(): SkiaRect {
+    val (left, right) = orderedPair(start.x, end.x)
+    val (top, bottom) = orderedPair(start.y, end.y)
+    return SkiaRect(left, top, right, bottom)
+}
+
+fun Shape.toSkiaRect() = SkiaRect(
+    this.left.toSkiaFloat(),
+    this.top.toSkiaFloat() * 2,
+    (this.right + 1).toSkiaFloat(),
+    (this.bottom + 1).toSkiaFloat() * 2
+)
+
+fun Shape.toRTreeRectangle() = RTreeRectangle(
+    left,
+    top,
+    right,
+    bottom
+)
+
+private fun <T : Comparable<T>> orderedPair(a: T, b: T ) = if (a < b) {
+    a to b
+} else {
+    b to a
 }
 
 private fun Float.toKsnUnit() = (this / GRID_WIDTH).toInt()
