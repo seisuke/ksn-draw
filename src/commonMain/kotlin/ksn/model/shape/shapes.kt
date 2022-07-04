@@ -4,7 +4,6 @@ import ksn.Constants.Companion.GRID_WIDTH
 import ksn.model.Point
 import kotlin.math.max
 import kotlin.math.min
-import org.jetbrains.skia.Rect as SkiaRect
 
 sealed interface Shape {
     val id: Long
@@ -21,13 +20,6 @@ sealed interface Shape {
 
     fun Int.toSkiaFloat(): Float = (this * GRID_WIDTH).toFloat()
 }
-
-fun Shape.toSkiaRect() = SkiaRect(
-    this.left.toSkiaFloat(),
-    this.top.toSkiaFloat() * 2,
-    (this.right + 1).toSkiaFloat(),
-    (this.bottom + 1).toSkiaFloat() * 2
-)
 
 data class Rect(
     override val id: Long,
