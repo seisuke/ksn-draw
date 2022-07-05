@@ -17,7 +17,6 @@ import ksn.model.Tool
 import ksn.toIntDragStatus
 import ksn.toSkiaRect
 import ksn.update.AppModel
-import ksn.update.DragStatus
 import ksn.update.IntDragStatus
 import ksn.update.Msg
 import org.jetbrains.skia.PaintMode

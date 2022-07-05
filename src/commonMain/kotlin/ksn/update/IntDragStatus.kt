@@ -18,10 +18,6 @@ data class IntDragStatus(
     data class DragEnd(val dragStatus: IntDragStatus): Msg
 
     companion object {
-        val Zero = IntDragStatus(
-            Point(0, 0),
-            Point(0, 0)
-        )
 
         fun handleDragEnd(
             model: AppModel,
