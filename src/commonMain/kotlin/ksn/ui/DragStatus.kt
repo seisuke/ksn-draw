@@ -1,4 +1,4 @@
-package ksn.update
+package ksn.ui
 
 import androidx.compose.ui.geometry.Offset
 

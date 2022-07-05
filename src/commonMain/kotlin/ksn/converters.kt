@@ -7,15 +7,36 @@ import ksn.model.Point
 import ksn.model.shape.Line
 import ksn.model.shape.Rect
 import ksn.model.shape.Shape
-import ksn.update.DragStatus
+import ksn.ui.DragStatus
 import ksn.update.IntDragStatus
 import org.jetbrains.skia.Rect as SkiaRect
 import rtree.Rectangle as RTreeRectangle
+
+//FromSkiaConverters
 
 fun DragStatus.toIntDragStatus() = IntDragStatus(
     start.toKsnPoint(),
     end.toKsnPoint(),
 )
+
+// ToSkiaConverters
+
+fun Shape.toSkiaRect() = SkiaRect(
+    this.left.toSkiaFloat(),
+    this.top.toSkiaFloat() * 2,
+    (this.right + 1).toSkiaFloat(),
+    (this.bottom + 1).toSkiaFloat() * 2
+)
+
+//SkiaInternalConverters
+
+fun DragStatus.toSkiaRect(): SkiaRect {
+    val (left, right) = orderedPair(start.x, end.x)
+    val (top, bottom) = orderedPair(start.y, end.y)
+    return SkiaRect(left, top, right, bottom)
+}
+
+//KsnConverters
 
 fun IntDragStatus.toDataRect(): DataRect {
     val (left, right) = orderedPair(start.x, end.x)
@@ -56,19 +77,6 @@ fun IntDragStatus.toKsnLine(id: Long): Line {
         end
     )
 }
-
-fun DragStatus.toSkiaRect(): SkiaRect {
-    val (left, right) = orderedPair(start.x, end.x)
-    val (top, bottom) = orderedPair(start.y, end.y)
-    return SkiaRect(left, top, right, bottom)
-}
-
-fun Shape.toSkiaRect() = SkiaRect(
-    this.left.toSkiaFloat(),
-    this.top.toSkiaFloat() * 2,
-    (this.right + 1).toSkiaFloat(),
-    (this.bottom + 1).toSkiaFloat() * 2
-)
 
 fun Shape.toRTreeRectangle() = RTreeRectangle(
     left,
