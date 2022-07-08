@@ -2,6 +2,8 @@ package ksn.ascii
 
 import ksn.model.Point
 import ksn.model.shape.Line
+import ksn.model.shape.Rect
+import ksn.model.shape.Shape
 import kotlin.test.Test
 import kotlin.test.assertEquals
 
@@ -68,6 +70,34 @@ class AsciiTest {
                 "  │   ",
                 "  │   ",
                 "  └───"
+            )
+        )
+    }
+
+    @Test
+    fun overhangShape1() {
+        val rect = Rect(
+            1L,
+            2,
+            -1,
+            4,
+            1
+        )
+
+        val ascii = Ascii(
+            Matrix.init(5, 5, AsciiChar.Char(" "))
+        )
+        ascii.mergeToMatrix(listOf(rect))
+        val text = ascii.matrix.joinToString { it.value }
+
+        assertEquals(
+            text,
+            listOf(
+                "  │ │",
+                "  └─┘",
+                "     ",
+                "     ",
+                "     ",
             )
         )
     }

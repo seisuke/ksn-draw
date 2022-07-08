@@ -55,6 +55,7 @@ data class AppModel(
 
     fun exportClipBoard(clipBoard: ClipboardManager) {
         val maxRectangle = this.rtree.mbr() ?: return
+        // TODO ascii size is strange when mbr size overhead grid
         val ascii = Ascii(
             Matrix.init(
                 maxRectangle.x2 + 1,
