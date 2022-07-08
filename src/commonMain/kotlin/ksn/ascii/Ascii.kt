@@ -56,9 +56,8 @@ class Ascii(
 
     fun Line.toAsciiMatrix(): Matrix<AsciiChar> {
         val matrix = Matrix.init<AsciiChar>(width, height, AsciiChar.Char(SPACE))
-        val split = ceil(width / 2f).toInt() - 1
-
-        val boundingList = this.toPointList(split)
+        val landscape = width > height
+        val boundingList = this.toPointList(landscape)
             .toBoundingPointsList()
             .map(::toBounding)
         val boxDrawing = boundingList.complementStroke() + boundingList.last()
@@ -68,24 +67,49 @@ class Ascii(
         }
 
         val point = boxDrawing.last().point
-        if (point.x == 0) {
-            matrix.set(point.x, point.y, AsciiChar.Char(BoundingType.LEFT_TRIANGLE.char))
+        val triangle = if (width > height) {
+            if (point.x == 0) {
+                BoundingType.LEFT_TRIANGLE
+            } else {
+                BoundingType.RIGHT_TRIANGLE
+            }
         } else {
-            matrix.set(point.x, point.y, AsciiChar.Char(BoundingType.RIGHT_TRIANGLE.char))
+            if (point.y == 0) {
+                BoundingType.UP_TRIANGLE
+            } else {
+                BoundingType.DOWN_TRIANGLE
+            }
         }
+        matrix.set(point.x, point.y, AsciiChar.Char(triangle.char))
         return matrix
     }
 
-    private fun Line.toPointList(split: Int): List<Point> {
-        val p2 = Point(split, 0)
-        val p3 = Point(split, height - 1)
+    private fun Line.toPointList(landscape: Boolean): List<Point> {
+        val split = if (landscape) {
+            ceil(width / 2f).toInt() - 1
+        } else {
+            ceil(height / 2f).toInt() - 1
+        }
+        val (p2, p3) = if (landscape) {
+            Point(split, 0) to Point(split, height - 1)
+        } else {
+            Point(0, split) to Point(width - 1, split)
+        }
         val offsetStart = start - Point(left, top)
         val offsetEnd = end - Point(left, top)
 
-        return if ((start.x > end.x && start.y > end.y) || (start.x < end.x && start.y > end.y)) {
-            listOf(offsetStart, p3, p2, offsetEnd)
+        return if (landscape) {
+            if ((start.x > end.x && start.y > end.y) || (start.x < end.x && start.y > end.y)) {
+                listOf(offsetStart, p3, p2, offsetEnd)
+            } else {
+                listOf(offsetStart, p2, p3, offsetEnd)
+            }
         } else {
-            listOf(offsetStart, p2, p3, offsetEnd)
+            if ((start.x > end.x && start.y > end.y) || (start.x > end.x && start.y < end.y)) {
+                listOf(offsetStart, p3, p2, offsetEnd)
+            } else {
+                listOf(offsetStart, p2, p3, offsetEnd)
+            }
         }
     }
 

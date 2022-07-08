@@ -3,7 +3,6 @@ package ksn.ascii
 import ksn.model.Point
 import ksn.model.shape.Line
 import ksn.model.shape.Rect
-import ksn.model.shape.Shape
 import kotlin.test.Test
 import kotlin.test.assertEquals
 
@@ -12,7 +11,7 @@ class AsciiTest {
     fun lineMatrix1() {
         val line = Line(
             1L,
-            Point(2, 3),
+            Point(2, 6),
             Point(7, 8),
         )
         val text = convertTextList(line)
@@ -22,54 +21,106 @@ class AsciiTest {
             listOf(
                 "──┐   ",
                 "  │   ",
-                "  │   ",
-                "  │   ",
-                "  │   ",
                 "  └──▶"
             )
         )
     }
 
     @Test
-    fun lineMatrix2() {
+    fun lineMatrixPortrait1() {
         val line = Line(
             1L,
             Point(2, 8),
             Point(7, 3),
         )
         val text = convertTextList(line)
-
         assertEquals(
             text,
             listOf(
-                "  ┌──▶",
-                "  │   ",
-                "  │   ",
-                "  │   ",
-                "  │   ",
-                "──┘   "
+                "     ▲",
+                "     │",
+                "┌────┘",
+                "│     ",
+                "│     ",
+                "│     ",
             )
         )
     }
 
     @Test
-    fun lineMatrix3() {
+    fun lineMatrixPortrait2() {
         val line = Line(
             1L,
             Point(7, 8),
             Point(2, 3),
         )
         val text = convertTextList(line)
+        assertEquals(
+            text,
+            listOf(
+                "▲     ",
+                "│     ",
+                "└────┐",
+                "     │",
+                "     │",
+                "     │",
+            )
+        )
+    }
+
+    @Test
+    fun lineMatrixPortrait3() {
+        val line = Line(
+            1L,
+            Point(7, 3),
+            Point(2, 8),
+        )
+        val text = convertTextList(line)
+        assertEquals(
+            text,
+            listOf(
+                "     │",
+                "     │",
+                "┌────┘",
+                "│     ",
+                "│     ",
+                "▼     ",
+            )
+        )
+    }
+
+    @Test
+    fun lineMatrixStraight1() {
+        val line = Line(
+            1L,
+            Point(4, 7),
+            Point(7, 7),
+        )
+        val text = convertTextList(line)
 
         assertEquals(
             text,
             listOf(
-                "◀─┐   ",
-                "  │   ",
-                "  │   ",
-                "  │   ",
-                "  │   ",
-                "  └───"
+                "───▶",
+            )
+        )
+    }
+
+    @Test
+    fun lineMatrixStraight2() {
+        val line = Line(
+            1L,
+            Point(4, 6),
+            Point(4, 4),
+        )
+        val text = convertTextList(line)
+
+        assertEquals(
+            text,
+            listOf(
+                "▲",
+                "│",
+                "│",
             )
         )
     }
