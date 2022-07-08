@@ -48,22 +48,6 @@ class RTree<T, S : Geometry> private constructor(
     }
 
     /**
-     * Returns an immutable copy of the RTree with the addition of an entry
-     * comprised of the given value and Geometry.
-     *
-     * @param value
-     * the value of the [Entry] to be added
-     * @param geometry
-     * the geometry of the [Entry] to be added
-     * @return a new immutable R-tree including the new entry
-     */
-    fun add(value: T, geometry: S): RTree<T, S> {
-        return add(
-            Entry(value, geometry)
-        )
-    }
-
-    /**
      * Returns an immutable RTree with the current entries and the additional
      * entries supplied as a parameter.
      *
@@ -103,46 +87,6 @@ class RTree<T, S : Geometry> private constructor(
         tree.delete(entry)
     }
 
-    /**
-     * If `all` is false deletes one entry matching the given value and
-     * Geometry. If `all` is true deletes all entries matching the given
-     * value and geometry. This method has no effect if the entry is not present.
-     * The entry must match on both value and geometry to be deleted.
-     *
-     * @param value
-     * the value of the [Entry] to be deleted
-     * @param geometry
-     * the geometry of the [Entry] to be deleted
-     * @param all
-     * if false deletes one if exists else deletes all
-     * @return a new immutable R-tree without one or many instances of the specified
-     * entry if it exists otherwise returns the original RTree object
-     */
-    fun delete(value: T, geometry: S, all: Boolean): RTree<T, S> {
-        return delete(
-            Entry(value, geometry),
-            all
-        )
-    }
-
-    /**
-     * Deletes maximum one entry matching the given value and geometry. This method
-     * has no effect if the entry is not present. The entry must match on both value
-     * and geometry to be deleted.
-     *
-     * @param value
-     * the value to be matched for deletion
-     * @param geometry
-     * the geometry to be matched for deletion
-     * @return an immutable RTree without one entry (if found) matching the given
-     * value and geometry
-     */
-    fun delete(value: T, geometry: S): RTree<T, S> {
-        return delete(
-            Entry(value, geometry),
-            false
-        )
-    }
     /**
      * Deletes one entry if it exists, returning an immutable copy of the RTree
      * without that entry. If multiple copies of the entry are in the R-tree only

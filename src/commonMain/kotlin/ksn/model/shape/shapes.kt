@@ -2,6 +2,7 @@ package ksn.model.shape
 
 import ksn.Constants.Companion.GRID_WIDTH
 import ksn.model.Point
+import ksn.model.plus
 import kotlin.math.max
 import kotlin.math.min
 
@@ -19,6 +20,8 @@ sealed interface Shape {
         get() = width <= 1 || height <= 1
 
     fun Int.toSkiaFloat(): Float = (this * GRID_WIDTH).toFloat()
+
+    fun translate(point: Point): Shape
 }
 
 data class Rect(
@@ -43,6 +46,14 @@ data class Rect(
             bottom = bottom
         )
     }
+
+    override fun translate(point: Point): Shape = Rect(
+        id,
+        left + point.x,
+        top + point.y,
+        right + point.x,
+        bottom + point.y
+    )
 }
 
 data class Line(
@@ -54,5 +65,11 @@ data class Line(
     override val top: Int = min(start.y, end.y)
     override val right: Int = max(start.x, end.x)
     override val bottom: Int = max(start.y, end.y)
+
+    override fun translate(point: Point) = Line(
+        id,
+        start + point,
+        end + point,
+    )
 }
 

@@ -21,7 +21,15 @@ fun AsciiLayer(
     ascii: Ascii,
 ) {
     val element = ModelElement.current
-    val shapes by element.mapAsState(AppModel::shapes)
+    val shapes by element.mapAsState { model ->
+        model.shapes.map { shape ->
+            if (model.selectShapeIdList.contains(shape.id)) {
+                shape.translate(model.drag)
+            } else {
+                shape
+            }
+        }
+    }
     val typeface by element.mapAsState(AppModel::typeface)
 
     ascii.matrix.clear()

@@ -46,7 +46,7 @@ interface HasGeometry {
     fun geometry(): Geometry
 }
 
-open class Rectangle(
+data class Rectangle(
     val x1: Int,
     val y1: Int,
     val x2: Int,
@@ -101,10 +101,16 @@ open class Rectangle(
 
 }
 
-class Point(
+data class Point(
     val x: Int,
     val y: Int
-) : Rectangle(x, y, x, y)
+) : Geometry, HasGeometry {
+    private val rectangle = Rectangle(x, y, x, y)
+    override fun distance(r: Rectangle) = rectangle.distance(r)
+    override fun mbr() = rectangle.mbr()
+    override fun intersects(r: Rectangle) = rectangle.intersects(r)
+    override fun geometry() = rectangle.geometry()
+}
 
 /**
  *
