@@ -78,13 +78,20 @@ private suspend fun PointerInputScope.createDetectDragGesture(
 ) {
     detectDragGestures(
         onDragStart = { offset ->
-            dragStatusFlow.value = DragStatus(offset / scale, offset / scale)
+            val dragStatus = DragStatus(offset / scale, offset / scale)
+            element.accept(
+                IntDragStatus.DragStart(dragStatus.toIntDragStatus())
+            )
+            dragStatusFlow.value = dragStatus
         },
         onDrag = { change, dragAmount ->
             change.consume()
             val oldDragStatus = dragStatusFlow.value
             val newDragStatus = oldDragStatus.copy(
                 end = oldDragStatus.end + dragAmount / scale
+            )
+            element.accept(
+                IntDragStatus.Drag(newDragStatus.toIntDragStatus())
             )
             dragStatusFlow.value = newDragStatus
         },

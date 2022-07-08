@@ -7,6 +7,7 @@ import kotlinx.atomicfu.AtomicLong
 import ksn.ascii.Ascii
 import ksn.ascii.AsciiChar
 import ksn.ascii.Matrix
+import ksn.model.Point
 import ksn.model.Tool
 import ksn.model.shape.Shape
 import org.jetbrains.skia.Typeface
@@ -19,9 +20,10 @@ data class AppModel(
     val maxId: AtomicLong,
     val shapes: List<Shape> = emptyList(),
     val selectShapeIdList: List<Long> = emptyList(),
-    val rtree: RTree<Shape, Rectangle> = RTree.create(
+    val rtree: RTree<Long, Rectangle> = RTree.create(
         emptyList()
     ),
+    val drag: Point = Point.Zero,
     val typeface: Typeface? = null,
     val snackbarHostState: SnackbarHostState = SnackbarHostState()
 ) {

@@ -107,7 +107,10 @@ class RTreeTest {
         println(milliSeconds)
     }
 
-    private fun point(n: Int) = Entry(n,Point(n, n))
+    private fun point(n: Int) = object : Entry<Int, Point> {
+        override val value = n
+        override fun geometry() = Point(n, n)
+    }
 
     private fun rectangle(
         n: Int,
@@ -115,9 +118,8 @@ class RTreeTest {
         y1: Int,
         x2: Int,
         y2: Int,
-    ) = Entry(
-        n,
-        Rectangle(x1, y1, x2, y2)
-    )
-
+    ) = object : Entry<Int, Rectangle> {
+        override val value = n
+        override fun geometry() = Rectangle(x1, y1, x2, y2)
+    }
 }

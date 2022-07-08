@@ -16,11 +16,9 @@ data class NodeAndEntries<T, GEOMETRY : Geometry>(
     val countDeleted: Int
 )
 
-data class Entry<T, GEOMETRY : Geometry>(
-    val value: T,
-    private val geometry: GEOMETRY
-) : HasGeometry {
-    override fun geometry(): GEOMETRY = geometry
+interface Entry<T, GEOMETRY : Geometry> : HasGeometry {
+    val value: T
+    override fun geometry(): GEOMETRY
 }
 
 interface Leaf<T, GEOMETRY : Geometry> : Node<T, GEOMETRY> {

@@ -93,7 +93,7 @@ fun mainView() {
             Row (
                 modifier = Modifier.padding(16.dp)
             ){
-                toolButton(Tool.Select)
+                toolButton(Tool.Select())
                 Spacer(Modifier.width(16.dp))
                 toolButton(Tool.Rect)
                 Spacer(Modifier.width(16.dp))

@@ -9,7 +9,9 @@ import ksn.ui.icons.Select
 import ksn.ui.icons.Text
 
 sealed class Tool(val label: String, val icon: ImageVector) {
-    object Select : Tool("Select",  Icons.Outlined.Select)
+    data class Select(
+        val moving: Boolean = false
+    ) : Tool("Select",  Icons.Outlined.Select)
     object Rect : Tool("Rect",  Icons.Outlined.Rect)
     object Text : Tool("Text",  Icons.Outlined.Text)
     object Line : Tool("Line",  Icons.Outlined.Line)
