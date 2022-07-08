@@ -17,7 +17,6 @@ sealed interface Shape {
     val height: Int
         get() = bottom - top + 1
     val isEmpty: Boolean
-        get() = width <= 1 || height <= 1
 
     fun Int.toSkiaFloat(): Float = (this * GRID_WIDTH).toFloat()
 
@@ -47,6 +46,9 @@ data class Rect(
         )
     }
 
+    override val isEmpty: Boolean
+        get() = width <= 1 || height <= 1
+
     override fun translate(point: Point): Shape = Rect(
         id,
         left + point.x,
@@ -65,6 +67,9 @@ data class Line(
     override val top: Int = min(start.y, end.y)
     override val right: Int = max(start.x, end.x)
     override val bottom: Int = max(start.y, end.y)
+
+    override val isEmpty: Boolean
+        get() = width <= 1 && height <= 1
 
     override fun translate(point: Point) = Line(
         id,
