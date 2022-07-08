@@ -1,7 +1,6 @@
 package rtree
 
 import java.util.*
-import kotlin.Comparator
 
 actual class BoundedPriorityQueue<T> actual constructor(
     private val maxSize: Int,

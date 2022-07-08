@@ -7,14 +7,14 @@ import ksn.model.Point
 import ksn.model.shape.Line
 import ksn.model.shape.Rect
 import ksn.model.shape.Shape
-import ksn.ui.DragStatus
-import ksn.update.IntDragStatus
+import ksn.ui.SkiaDragStatus
+import ksn.update.DragStatus
 import org.jetbrains.skia.Rect as SkiaRect
 import rtree.Rectangle as RTreeRectangle
 
 //FromSkiaConverters
 
-fun DragStatus.toIntDragStatus() = IntDragStatus(
+fun SkiaDragStatus.toDragStatus() = DragStatus(
     start.toKsnPoint(),
     end.toKsnPoint(),
 )
@@ -30,7 +30,7 @@ fun Shape.toSkiaRect() = SkiaRect(
 
 //SkiaInternalConverters
 
-fun DragStatus.toSkiaRect(): SkiaRect {
+fun SkiaDragStatus.toSkiaRect(): SkiaRect {
     val (left, right) = orderedPair(start.x, end.x)
     val (top, bottom) = orderedPair(start.y, end.y)
     return SkiaRect(left, top, right, bottom)
@@ -38,18 +38,7 @@ fun DragStatus.toSkiaRect(): SkiaRect {
 
 //KsnConverters
 
-fun IntDragStatus.toDataRect(): DataRect {
-    val (left, right) = orderedPair(start.x, end.x)
-    val (top, bottom) = orderedPair(start.y, end.y)
-    return DataRect(
-        left,
-        top,
-        right,
-        bottom
-    )
-}
-
-fun IntDragStatus.toRTreeRectangle(): RTreeRectangle {
+fun DragStatus.toRTreeRectangle(): RTreeRectangle {
     val (left, top, right ,bottom) = toDataRect()
     return RTreeRectangle(
         left,
@@ -59,7 +48,7 @@ fun IntDragStatus.toRTreeRectangle(): RTreeRectangle {
     )
 }
 
-fun IntDragStatus.toKsnRect(id: Long): Rect {
+fun DragStatus.toKsnRect(id: Long): Rect {
     val (left, top, right ,bottom) = toDataRect()
     return Rect(
         id,
@@ -70,7 +59,7 @@ fun IntDragStatus.toKsnRect(id: Long): Rect {
     )
 }
 
-fun IntDragStatus.toKsnLine(id: Long): Line {
+fun DragStatus.toKsnLine(id: Long): Line {
     return Line(
         id,
         start,
@@ -84,6 +73,17 @@ fun Shape.toRTreeRectangle() = RTreeRectangle(
     right,
     bottom
 )
+
+private fun DragStatus.toDataRect(): DataRect {
+    val (left, right) = orderedPair(start.x, end.x)
+    val (top, bottom) = orderedPair(start.y, end.y)
+    return DataRect(
+        left,
+        top,
+        right,
+        bottom
+    )
+}
 
 private fun <T : Comparable<T>> orderedPair(a: T, b: T ) = if (a < b) {
     a to b
