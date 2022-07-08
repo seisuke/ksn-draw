@@ -2,7 +2,7 @@ package ksn.ascii
 
 class Matrix<T> private constructor(
     private val width: Int,
-    height: Int,
+    private val height: Int,
     initialValue: List<T>
 ) {
     var initial: T? = null
@@ -46,6 +46,13 @@ class Matrix<T> private constructor(
 
     fun merge(other: Matrix<T>, offsetX: Int, offsetY: Int) {
         other.withPoint().forEach { (x, y, value) ->
+            if (x + offsetX < 0 || y + offsetY < 0) {
+                return@forEach
+            }
+            if (x + offsetX >= this.width || y + offsetY >= this.height ) {
+                return@forEach
+            }
+
             set(x + offsetX, y + offsetY, value)
         }
     }
