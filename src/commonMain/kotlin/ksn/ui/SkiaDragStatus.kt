@@ -2,13 +2,13 @@ package ksn.ui
 
 import androidx.compose.ui.geometry.Offset
 
-data class DragStatus(
+data class SkiaDragStatus(
     val start: Offset,
     val end: Offset,
 ) {
 
     companion object {
-        val Zero = DragStatus(
+        val Zero = SkiaDragStatus(
             Offset.Zero,
             Offset.Zero
         )

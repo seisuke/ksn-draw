@@ -11,19 +11,27 @@ import ksn.model.shape.Shape
 import ksn.toKsnLine
 import ksn.toKsnRect
 import ksn.toRTreeRectangle
-import rtree.Entry
+import rtree.RTree
 import rtree.Rectangle
 import rtree.Point as RTreePoint
 
-data class IntDragStatus(
+data class DragStatus(
     val start: Point,
     val end: Point,
 ) {
-    data class DragStart(val dragStatus: IntDragStatus): Msg
-    data class Drag(val dragStatus: IntDragStatus): Msg
-    data class DragEnd(val dragStatus: IntDragStatus): Msg
+    data class DragStart(val dragStatus: DragStatus): Msg
+    data class Drag(val dragStatus: DragStatus): Msg
+    data class DragEnd(val dragStatus: DragStatus): Msg
 
     val isNotEmpty = start.x != end.x || start.y != end.y
+
+    val dragValue = end - start
+
+    private data class Translate(
+        val id: Long,
+        val prevRectangle: Rectangle,
+        val newRectangle: Rectangle,
+    )
 
     companion object {
 
@@ -57,7 +65,7 @@ data class IntDragStatus(
             msg: Drag
         ): Pure<AppModel> {
             return if (model.tool is Tool.Select && model.tool.moving)  {
-                val drag = msg.dragStatus.end - msg.dragStatus.start
+                val drag = msg.dragStatus.dragValue
                 model.copy(
                     drag = drag,
                 ) + None
@@ -82,35 +90,13 @@ data class IntDragStatus(
                     model.returnUpdateModel(line) + None
                 }
                 is Tool.Select -> if (model.tool.moving) {
-
-                    val entries1 = mutableListOf<Entry<Long, Rectangle>>()
-                    val entries2 = mutableListOf<Entry<Long, Rectangle>>()
-
-                    val shapes = model.shapes.map { shape ->
-                        if (model.selectShapeIdList.contains(shape.id)) {
-                            val drag = msg.dragStatus.end - msg.dragStatus.start
-                            entries1.add(
-                                RTreeEntry(shape.id, shape.toRTreeRectangle())
-                            )
-                            val newShape = shape.translate(drag)
-                            entries2.add(
-                                RTreeEntry(newShape.id, newShape.toRTreeRectangle())
-                            )
-                            newShape
-                        } else {
-                            shape
-                        }
-                    }
-
-                    val rtree = model.rtree.delete(entries1).add(entries2)
-
+                    val (shapes, rtree) = moveShapeAndRTree(model, msg.dragStatus.dragValue)
                     model.copy(
                         tool = Tool.Select(),
                         shapes = shapes,
                         rtree = rtree,
                         drag = Point.Zero
                     ) + None
-
                 } else {
                     val rTreeRect = msg.dragStatus.toRTreeRectangle()
                     val result = model.rtree.search(rTreeRect).toList()
@@ -136,6 +122,43 @@ data class IntDragStatus(
                 )
             )
             this.copy(shapes = shapes, rtree = rtree, drag = Point.Zero)
+        }
+
+        private fun moveShapeAndRTree(model: AppModel, dragValue: Point): Pair<List<Shape>, RTree<Long, Rectangle>> {
+            val rtreeTranslate = mutableListOf<Translate>()
+            val shapes = model.shapes.map { shape ->
+                if (model.selectShapeIdList.contains(shape.id)) {
+                    val newShape = shape.translate(dragValue)
+                    rtreeTranslate.add(
+                        Translate(
+                            shape.id,
+                            shape.toRTreeRectangle(),
+                            newShape.toRTreeRectangle()
+                        )
+                    )
+                    newShape
+                } else {
+                    shape
+                }
+            }
+            val rtree = model.rtree.move(rtreeTranslate)
+            return shapes to rtree
+        }
+
+        private fun RTree<Long, Rectangle>.move(
+            translateList: MutableList<Translate>
+        ): RTree<Long, Rectangle> = translateList.fold(this) { rtree, translate ->
+            rtree.delete(
+                RTreeEntry(
+                    translate.id,
+                    translate.prevRectangle
+                )
+            ).add(
+                RTreeEntry(
+                        translate.id,
+                    translate.newRectangle
+                )
+            )
         }
     }
 }

@@ -14,10 +14,10 @@ import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.combineTransform
 import ksn.ModelElement
 import ksn.model.Tool
-import ksn.toIntDragStatus
+import ksn.toDragStatus
 import ksn.toSkiaRect
 import ksn.update.AppModel
-import ksn.update.IntDragStatus
+import ksn.update.DragStatus
 import ksn.update.Msg
 import org.jetbrains.skia.PaintMode
 import org.jetbrains.skia.PathEffect
@@ -26,23 +26,24 @@ import org.jetbrains.skia.PathEffect
 fun UiLayer(width: Dp, scale: Float) {
     val element = ModelElement.current
 
-    val dragStatusFlow = MutableStateFlow(DragStatus.Zero)
-    val dragStatus by dragStatusFlow.collectAsState()
+    val skiaDragStatusFlow = MutableStateFlow(SkiaDragStatus.Zero)
+    val dragStatus by skiaDragStatusFlow.collectAsState()
     val tool by element.flowMapAsState { modelStateFlow ->
-        modelStateFlow.value.tool to modelStateFlow.combineTransform(dragStatusFlow) { model, dragStatus ->
-            if (dragStatus != DragStatus.Zero) {
+        modelStateFlow.value.tool to modelStateFlow.combineTransform(skiaDragStatusFlow) { model, dragStatus ->
+            if (dragStatus != SkiaDragStatus.Zero) {
                 emit(model.tool)
             }
         }
     }
     val shapes by element.mapAsState(AppModel::selectedShapes)
+    val drag by element.mapAsState(AppModel::drag)
 
     Layer(
         width * scale,
         width * 2 * scale,
         Modifier.pointerInput(Unit) {
             createDetectDragGesture(
-                dragStatusFlow,
+                skiaDragStatusFlow,
                 element,
                 scale
             )
@@ -51,7 +52,7 @@ fun UiLayer(width: Dp, scale: Float) {
         nativeCanvas.apply {
             if (tool is Tool.Select) {
                 if (shapes.isEmpty()) {
-                    if (dragStatus == DragStatus.Zero) {
+                    if (dragStatus == SkiaDragStatus.Zero) {
                         return@Layer
                     }
                     paint.color = 0xFF0000FF.toInt()
@@ -63,7 +64,7 @@ fun UiLayer(width: Dp, scale: Float) {
                     paint.color = 0xFF0000FF.toInt()
                     paint.mode = PaintMode.STROKE
                     shapes.forEach { shape ->
-                        drawRect(shape.toSkiaRect(), paint)
+                        drawRect(shape.translate(drag).toSkiaRect(), paint)
                     }
                 }
             }
@@ -72,34 +73,34 @@ fun UiLayer(width: Dp, scale: Float) {
 }
 
 private suspend fun PointerInputScope.createDetectDragGesture(
-    dragStatusFlow: MutableStateFlow<DragStatus>,
+    skiaDragStatusFlow: MutableStateFlow<SkiaDragStatus>,
     element: Element<AppModel, Msg>,
     scale: Float
 ) {
     detectDragGestures(
         onDragStart = { offset ->
-            val dragStatus = DragStatus(offset / scale, offset / scale)
+            val skiaDragStatus = SkiaDragStatus(offset / scale, offset / scale)
             element.accept(
-                IntDragStatus.DragStart(dragStatus.toIntDragStatus())
+                DragStatus.DragStart(skiaDragStatus.toDragStatus())
             )
-            dragStatusFlow.value = dragStatus
+            skiaDragStatusFlow.value = skiaDragStatus
         },
         onDrag = { change, dragAmount ->
             change.consume()
-            val oldDragStatus = dragStatusFlow.value
+            val oldDragStatus = skiaDragStatusFlow.value
             val newDragStatus = oldDragStatus.copy(
                 end = oldDragStatus.end + dragAmount / scale
             )
             element.accept(
-                IntDragStatus.Drag(newDragStatus.toIntDragStatus())
+                DragStatus.Drag(newDragStatus.toDragStatus())
             )
-            dragStatusFlow.value = newDragStatus
+            skiaDragStatusFlow.value = newDragStatus
         },
         onDragEnd = {
             element.accept(
-                IntDragStatus.DragEnd(dragStatusFlow.value.toIntDragStatus())
+                DragStatus.DragEnd(skiaDragStatusFlow.value.toDragStatus())
             )
-            dragStatusFlow.value = DragStatus.Zero
+            skiaDragStatusFlow.value = SkiaDragStatus.Zero
         },
     )
 }
