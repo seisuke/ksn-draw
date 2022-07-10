@@ -15,6 +15,7 @@ import androidx.compose.material.Card
 import androidx.compose.material.MaterialTheme
 import androidx.compose.material.SnackbarHost
 import androidx.compose.material.Text
+import androidx.compose.material.lightColors
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.CompositionLocalProvider
 import androidx.compose.runtime.compositionLocalOf
@@ -56,7 +57,11 @@ fun App(
     CompositionLocalProvider(
         ModelElement provides appModelElement
     ) {
-        mainView()
+        MaterialTheme(
+            colors = lightColors()
+        ) {
+            mainView()
+        }
     }
 }
 

@@ -24,13 +24,11 @@ fun main() = application {
         icon = painterResource("assets/icon.png"),
         state = windowState
     ) {
-        MaterialTheme {
-            App(
+        App(
                 /*requestWindowSize = { w, h ->
                     windowState.size = windowState.size.copy(width = w, height = h)
                 }*/
-            )
-        }
+        )
     }
 }
 
