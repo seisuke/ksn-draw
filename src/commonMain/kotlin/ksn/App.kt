@@ -40,10 +40,9 @@ val ModelElement = compositionLocalOf<Element<AppModel, Msg>> {
 }
 
 @Composable
-fun App(
-    //requestWindowSize: ((width: Dp, height: Dp) -> Unit)? = null
+fun InitElementAndLocalProvideThat(
+    content: @Composable () -> Unit
 ) {
-
     val appModelElement = Element.create(
         AppModel(
             title = "hello",
@@ -57,11 +56,18 @@ fun App(
     CompositionLocalProvider(
         ModelElement provides appModelElement
     ) {
-        MaterialTheme(
-            colors = lightColors()
-        ) {
-            mainView()
-        }
+        content()
+    }
+}
+
+@Composable
+fun App(
+    //requestWindowSize: ((width: Dp, height: Dp) -> Unit)? = null
+) {
+    MaterialTheme(
+        colors = lightColors()
+    ) {
+        mainView()
     }
 }
 
