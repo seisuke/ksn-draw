@@ -10,9 +10,11 @@ import ksn.loadTypeface
 import ksn.update.DragStatus.Companion.handleDrag
 import ksn.update.DragStatus.Companion.handleDragEnd
 import ksn.update.DragStatus.Companion.handleDragStart
+import ksn.update.KeyMsg.Companion.handleKeyMsg
 
 class AppModelUpdate : Update<AppModel, Msg, Cmd> {
     override fun update(msg: Msg, model: AppModel): Sub<AppModel, Cmd> = when (msg) {
+        is KeyMsg -> handleKeyMsg(model, msg.key)
         is AppModel.CurrentTool -> model.copy(tool = msg.tool) + None
         AppModel.StartLoadFont -> model + AppModel.LoadFont
         is AppModel.LoadFontResult -> model.copy(typeface = msg.typeface) + None
@@ -24,7 +26,7 @@ class AppModelUpdate : Update<AppModel, Msg, Cmd> {
         is DragStatus.DragStart -> handleDragStart(model, msg)
         is DragStatus.Drag -> handleDrag(model, msg)
         is DragStatus.DragEnd -> handleDragEnd(model, msg)
-        else -> model + None //sometimes error says "add necessary 'else' branch" in build why?
+        //else -> model + None //all msg are handled but sometimes error says "add necessary 'else' branch" in build
     }
 
 
