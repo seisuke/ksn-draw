@@ -1,11 +1,13 @@
 package ksn.ui
 
 import androidx.compose.foundation.gestures.detectDragGestures
+import androidx.compose.material.MaterialTheme
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.nativeCanvas
+import androidx.compose.ui.graphics.toArgb
 import androidx.compose.ui.input.pointer.PointerInputScope
 import androidx.compose.ui.input.pointer.pointerInput
 import androidx.compose.ui.unit.Dp
@@ -38,6 +40,8 @@ fun UiLayer(width: Dp, scale: Float) {
     val shapes by element.mapAsState(AppModel::selectedShapes)
     val drag by element.mapAsState(AppModel::drag)
 
+    val primaryColor = MaterialTheme.colors.primary.toArgb()
+
     Layer(
         width * scale,
         width * 2 * scale,
@@ -55,13 +59,13 @@ fun UiLayer(width: Dp, scale: Float) {
                     if (dragStatus == SkiaDragStatus.Zero) {
                         return@Layer
                     }
-                    paint.color = 0xFF0000FF.toInt()
+                    paint.color = primaryColor
                     paint.mode = PaintMode.STROKE
                     paint.strokeWidth = 2f
                     paint.pathEffect = PathEffect.makeDash(floatArrayOf(5f, 5f), 0f)
                     drawRect(dragStatus.toSkiaRect(), paint)
                 } else {
-                    paint.color = 0xFF0000FF.toInt()
+                    paint.color = primaryColor
                     paint.mode = PaintMode.STROKE
                     shapes.forEach { shape ->
                         drawRect(shape.translate(drag).toSkiaRect(), paint)

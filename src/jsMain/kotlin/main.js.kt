@@ -6,9 +6,7 @@ import org.jetbrains.skiko.wasm.onWasmReady
 fun main() {
     onWasmReady {
         Window("ksn-draw") {
-            MaterialTheme {
-                App()
-            }
+            App()
         }
     }
 }
