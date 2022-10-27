@@ -1,4 +1,3 @@
-import org.jetbrains.compose.compose
 import org.jetbrains.compose.desktop.application.dsl.TargetFormat
 import org.jetbrains.kotlin.gradle.plugin.mpp.KotlinNativeTarget
 import org.jetbrains.kotlin.gradle.tasks.KotlinCompile
@@ -14,9 +13,9 @@ buildscript {
 }
 
 plugins {
-    val kotlinVersion = "1.6.21"
+    val kotlinVersion = "1.7.10"
     kotlin("multiplatform") version kotlinVersion
-    id("org.jetbrains.compose") version "1.2.0-alpha01-dev731"
+    id("org.jetbrains.compose") version "1.2.0"
 }
 
 repositories {
