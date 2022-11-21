@@ -13,9 +13,9 @@ buildscript {
 }
 
 plugins {
-    val kotlinVersion = "1.7.10"
+    val kotlinVersion = "1.7.20"
     kotlin("multiplatform") version kotlinVersion
-    id("org.jetbrains.compose") version "1.2.0"
+    id("org.jetbrains.compose") version "1.2.1"
 }
 
 repositories {
@@ -54,7 +54,7 @@ kotlin {
             dependencies {
                 implementation(compose.desktop.currentOs)
                 implementation(compose.preview)
-                implementation("org.jetbrains.kotlinx:kotlinx-coroutines-swing:1.6.0")
+                implementation("org.jetbrains.kotlinx:kotlinx-coroutines-swing:1.6.4")
             }
         }
         val desktopTest by getting {
