@@ -54,9 +54,15 @@ fun UiLayer(width: Dp, scale: Float) {
         }
     ) { paint ->
         nativeCanvas.apply {
-            if (tool is Tool.Select) {
-                if (shapes.isEmpty()) {
-                    if (dragStatus == SkiaDragStatus.Zero) {
+            when (val currentTool = tool) {
+                is Tool.Select -> {
+                    paint.color = primaryColor
+                    paint.mode = PaintMode.STROKE
+                    shapes.forEach { (_, shape) ->
+                        drawRect(shape.translate(drag).toSkiaRect(), paint)
+                    }
+
+                    if (dragStatus == SkiaDragStatus.Zero || currentTool.moving) {
                         return@Layer
                     }
                     paint.color = primaryColor
@@ -64,12 +70,12 @@ fun UiLayer(width: Dp, scale: Float) {
                     paint.strokeWidth = 2f
                     paint.pathEffect = PathEffect.makeDash(floatArrayOf(5f, 5f), 0f)
                     drawRect(dragStatus.toSkiaRect(), paint)
-                } else {
-                    paint.color = primaryColor
-                    paint.mode = PaintMode.STROKE
-                    shapes.forEach { (_, shape) ->
-                        drawRect(shape.translate(drag).toSkiaRect(), paint)
-                    }
+                }
+                is Tool.Rect -> {
+                    //TODO
+                }
+                else -> {
+
                 }
             }
         }
