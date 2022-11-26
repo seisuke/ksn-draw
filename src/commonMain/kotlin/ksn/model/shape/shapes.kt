@@ -7,7 +7,6 @@ import kotlin.math.max
 import kotlin.math.min
 
 sealed interface Shape {
-    val id: Long
     val left: Int
     val top: Int
     val right: Int
@@ -24,33 +23,15 @@ sealed interface Shape {
 }
 
 data class Rect(
-    override val id: Long,
     override val left: Int,
     override val top: Int,
     override val right: Int,
     override val bottom: Int
 ): Shape {
-    companion object {
-        fun initRect(
-            left: Int,
-            top: Int,
-            right: Int,
-            bottom: Int,
-            idGenerator: () -> Long
-        ): Rect = Rect(
-            id = idGenerator(),
-            left = left,
-            top = top,
-            right = right,
-            bottom = bottom
-        )
-    }
-
     override val isEmpty: Boolean
         get() = width <= 1 || height <= 1
 
     override fun translate(point: Point): Shape = Rect(
-        id,
         left + point.x,
         top + point.y,
         right + point.x,
@@ -59,7 +40,6 @@ data class Rect(
 }
 
 data class Line(
-    override val id: Long,
     val start: Point,
     val end: Point
 ): Shape {
@@ -72,7 +52,6 @@ data class Line(
         get() = width <= 1 && height <= 1
 
     override fun translate(point: Point) = Line(
-        id,
         start + point,
         end + point,
     )

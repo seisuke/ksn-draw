@@ -22,8 +22,8 @@ fun AsciiLayer(
 ) {
     val element = ModelElement.current
     val shapes by element.mapAsState { model ->
-        model.shapes.map { shape ->
-            if (model.selectShapeIdList.contains(shape.id)) {
+        model.shapes.map { (id, shape) ->
+            if (model.selectShapeIdList.contains(id)) {
                 shape.translate(model.drag)
             } else {
                 shape

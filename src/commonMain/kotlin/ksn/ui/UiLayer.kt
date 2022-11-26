@@ -67,7 +67,7 @@ fun UiLayer(width: Dp, scale: Float) {
                 } else {
                     paint.color = primaryColor
                     paint.mode = PaintMode.STROKE
-                    shapes.forEach { shape ->
+                    shapes.forEach { (_, shape) ->
                         drawRect(shape.translate(drag).toSkiaRect(), paint)
                     }
                 }

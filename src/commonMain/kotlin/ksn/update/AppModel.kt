@@ -18,7 +18,7 @@ data class AppModel(
     val title: String,
     val tool: Tool,
     val maxId: AtomicLong,
-    val shapes: List<Shape> = emptyList(),
+    val shapes: List<ShapeWithID> = emptyList(),
     val selectShapeIdList: List<Long> = emptyList(),
     val rtree: RTree<Long, Rectangle> = RTree.create(
         emptyList()
@@ -39,11 +39,11 @@ data class AppModel(
     /**
      * Mutable method. Returns list of [AppModel.shapes] plus [shape]
      */
-    fun addShape(shape: Shape): List<Shape> {
-        return shapes + shape
+    fun addShape(shapeWithID: ShapeWithID): List<ShapeWithID> {
+        return shapes + shapeWithID
     }
 
-    fun selectedShapes(): List<Shape> {
+    fun selectedShapes(): List<ShapeWithID> {
         if (selectShapeIdList.isEmpty()) {
             return emptyList()
         }
@@ -63,10 +63,16 @@ data class AppModel(
                 AsciiChar.Char(Ascii.SPACE)
             )
         )
-        ascii.mergeToMatrix(this.shapes)
+        ascii.mergeToMatrix(this.shapes.map(ShapeWithID::shape))
         val output = ascii.render(AsciiChar::value).joinToString(separator = "\n")
         clipBoard.setText(
             AnnotatedString(output)
         )
     }
 }
+
+//FIXME good name
+data class ShapeWithID(
+    val id: Long,
+    val shape: Shape,
+)

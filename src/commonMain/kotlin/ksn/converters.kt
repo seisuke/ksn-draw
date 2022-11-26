@@ -2,7 +2,6 @@ package ksn
 
 import androidx.compose.ui.geometry.Offset
 import ksn.Constants.Companion.GRID_WIDTH
-import ksn.model.DataRect
 import ksn.model.Point
 import ksn.model.shape.Line
 import ksn.model.shape.Rect
@@ -48,10 +47,9 @@ fun DragStatus.toRTreeRectangle(): RTreeRectangle {
     )
 }
 
-fun DragStatus.toKsnRect(id: Long): Rect {
+fun DragStatus.toKsnRect(): Rect {
     val (left, top, right ,bottom) = toDataRect()
     return Rect(
-        id,
         left,
         top,
         right,
@@ -59,9 +57,8 @@ fun DragStatus.toKsnRect(id: Long): Rect {
     )
 }
 
-fun DragStatus.toKsnLine(id: Long): Line {
+fun DragStatus.toKsnLine(): Line {
     return Line(
-        id,
         start,
         end
     )
@@ -96,4 +93,11 @@ private fun Float.toKsnUnit() = (this / GRID_WIDTH).toInt()
 private fun Offset.toKsnPoint() = Point(
     x.toKsnUnit(),
     (y / 2).toKsnUnit()
+)
+
+private data class DataRect(
+    val left: Int,
+    val top: Int,
+    val right: Int,
+    val bottom: Int
 )

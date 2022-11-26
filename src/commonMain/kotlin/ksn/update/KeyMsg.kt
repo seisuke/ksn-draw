@@ -15,8 +15,8 @@ class KeyMsg(val key: Key) : Msg {
         @OptIn(ExperimentalComposeUiApi::class)
         fun handleKeyMsg(model: AppModel, key: Key): Sub<AppModel, Cmd> {
             return if (key == Key.Backspace && model.selectShapeIdList.isNotEmpty()) {
-                val entries = model.selectedShapes().map { shape ->
-                    RTreeEntry(shape.id, shape.toRTreeRectangle())
+                val entries = model.selectedShapes().map { (id, shape) ->
+                    RTreeEntry(id, shape.toRTreeRectangle())
                 }
                 val rtree = model.rtree.delete(entries)
                 val shapes = model.shapes.filter { shape ->
