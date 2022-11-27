@@ -1,5 +1,6 @@
 package ksn.ui
 
+import ksn.model.shape.Line
 import ksn.model.shape.Rect
 import org.jetbrains.skia.Rect as SkiaRect
 
@@ -17,4 +18,8 @@ data class Selecting(
 
 data class AsciiRect(
     val rect: Rect,
+) : UiType
+
+data class AsciiLine(
+    val line: Line,
 ) : UiType

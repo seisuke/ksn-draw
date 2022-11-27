@@ -22,7 +22,9 @@ import ksn.ascii.AsciiRenderer
 import ksn.ascii.Matrix
 import ksn.model.Point
 import ksn.model.Tool
+import ksn.model.shape.Shape
 import ksn.toDragStatus
+import ksn.toKsnLine
 import ksn.toKsnRect
 import ksn.toSkiaRect
 import ksn.update.AppModel
@@ -104,6 +106,17 @@ private fun createUiType(
             )
         }
     }
+    is Tool.Line -> {
+        if (dragStatus == SkiaDragStatus.Zero) {
+            emptyList()
+        } else {
+            val line = dragStatus.toDragStatus().toKsnLine()
+            listOf(
+                AsciiLine(line)
+            )
+        }
+    }
+
     else -> emptyList()
 }
 
@@ -134,24 +147,24 @@ private fun Canvas.drawByUiType(
         is AsciiRect -> uiType.draw {
             paint.color = primaryColor
             val rect = uiType.rect
-            val ascii = Ascii(
-                Matrix.init(
-                    rect.width,
-                    rect.height,
-                    AsciiChar.Char(Ascii.SPACE)
-                )
+            val ascii = shapeToAscii(rect)
+            val offset = offsetFromShape(rect)
+            AsciiRenderer.drawAscii(
+                nativeCanvas,
+                paint,
+                typeface,
+                ascii,
+                scale,
+                offset.x,
+                offset.y
             )
-            val noOffsetRect = rect.translate(
-                Point(-rect.left, -rect.top)
-            )
+        }
 
-            val offset = with(rect) {
-                Offset(
-                    left.toSkiaFloat(),
-                    top.toSkiaFloat() * 2
-                )
-            }
-            ascii.mergeToMatrix(listOf(noOffsetRect))
+        is AsciiLine -> uiType.draw {
+            paint.color = primaryColor
+            val line = uiType.line
+            val ascii = shapeToAscii(line)
+            val offset = offsetFromShape(line)
             AsciiRenderer.drawAscii(
                 nativeCanvas,
                 paint,
@@ -163,6 +176,28 @@ private fun Canvas.drawByUiType(
             )
         }
     }
+}
+
+private fun offsetFromShape(shape: Shape): Offset = with(shape) {
+    Offset(
+        left.toSkiaFloat(),
+        top.toSkiaFloat() * 2
+    )
+}
+
+private fun shapeToAscii(shape: Shape): Ascii {
+    val ascii = Ascii(
+        Matrix.init(
+            shape.width,
+            shape.height,
+            AsciiChar.Char(Ascii.SPACE)
+        )
+    )
+    val noOffsetRect = shape.translate(
+        Point(-shape.left, -shape.top)
+    )
+    ascii.mergeToMatrix(listOf(noOffsetRect))
+    return ascii
 }
 
 private suspend fun PointerInputScope.createDetectDragGesture(
