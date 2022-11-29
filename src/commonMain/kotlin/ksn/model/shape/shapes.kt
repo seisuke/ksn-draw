@@ -57,3 +57,19 @@ data class Line(
     )
 }
 
+data class TextBox(
+    val rect: Rect,
+    val text: String,
+): Shape by rect {
+
+    override fun translate(point: Point): Shape = TextBox(
+        rect = Rect(
+            left + point.x,
+            top + point.y,
+            right + point.x,
+            bottom + point.y
+        ),
+        text = text,
+    )
+}
+

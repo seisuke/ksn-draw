@@ -16,7 +16,7 @@ fun CanvasView() {
         Matrix.init(
             columnNumber,
             columnNumber,
-            AsciiChar.Char(Ascii.SPACE)
+            AsciiChar.Space
         )
     )
 

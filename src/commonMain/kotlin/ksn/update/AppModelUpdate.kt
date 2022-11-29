@@ -1,5 +1,6 @@
 package ksn.update
 
+import androidx.compose.material.SnackbarDuration
 import elm.None
 import elm.Sub
 import elm.Update
@@ -7,6 +8,7 @@ import elm.plus
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.flow
 import ksn.loadTypeface
+import ksn.model.shape.TextBox
 import ksn.update.DragStatus.Companion.handleDrag
 import ksn.update.DragStatus.Companion.handleDragEnd
 import ksn.update.DragStatus.Companion.handleDragStart
@@ -23,10 +25,26 @@ class AppModelUpdate : Update<AppModel, Msg, Cmd> {
             model + AppModel.ShowSnackBarCmd("export ascii", model.snackbarHostState)
         }
         is AppModel.ShowSnackBar -> model + AppModel.ShowSnackBarCmd(msg.message, model.snackbarHostState)
+        is AppModel.TextBoxUpdate -> {
+            val selectedId = model.selectShapeIdList.first()
+            val newShapes = model.shapes.map { shapeWithID ->
+                if (shapeWithID.id == selectedId && shapeWithID.shape is TextBox) {
+                    ShapeWithID(
+                        shapeWithID.id,
+                        shapeWithID.shape.copy(
+                            text = msg.text
+                        )
+                    )
+                } else {
+                    shapeWithID
+                }
+            }
+            model.copy(shapes = newShapes) + None
+        }
         is DragStatus.DragStart -> handleDragStart(model, msg)
         is DragStatus.Drag -> handleDrag(model, msg)
         is DragStatus.DragEnd -> handleDragEnd(model, msg)
-        //else -> model + None //all msg are handled but sometimes error says "add necessary 'else' branch" in build
+        else -> model + None //all msg are handled but sometimes error says "add necessary 'else' branch" in build
     }
 
 
@@ -41,6 +59,13 @@ class AppModelUpdate : Update<AppModel, Msg, Cmd> {
             is AppModel.ShowSnackBarCmd -> {
                 cmd.snackbarHostState.showSnackbar(cmd.message)
             }
+            is AppModel.ShowTextFieldCmd -> {
+                cmd.inputTextFieldHostState.showSnackbar(
+                    "TEXT",
+                    duration = SnackbarDuration.Indefinite
+                )
+            }
+            else -> Unit
         }
     }
 

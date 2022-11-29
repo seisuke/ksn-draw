@@ -9,6 +9,7 @@ import ksn.ascii.AsciiChar
 import ksn.ascii.Matrix
 import ksn.model.Point
 import ksn.model.Tool
+import ksn.model.shape.Rect
 import ksn.model.shape.Shape
 import org.jetbrains.skia.Typeface
 import rtree.RTree
@@ -25,16 +26,19 @@ data class AppModel(
     ),
     val drag: Point = Point.Zero,
     val typeface: Typeface? = null,
-    val snackbarHostState: SnackbarHostState = SnackbarHostState()
+    val snackbarHostState: SnackbarHostState = SnackbarHostState(),
+    val inputTextFieldHostState: SnackbarHostState = SnackbarHostState(),
 ) {
     data class CurrentTool(val tool: Tool): Msg
     object StartLoadFont: Msg
     data class LoadFontResult(val typeface: Typeface): Msg
     data class ExportClipBoard(val clipBoard: ClipboardManager): Msg
     data class ShowSnackBar(val message: String): Msg
+    data class TextBoxUpdate(val text: String): Msg
 
     object LoadFont: Cmd
     data class ShowSnackBarCmd(val message: String, val snackbarHostState: SnackbarHostState): Cmd
+    data class ShowTextFieldCmd(val rect: Rect, val inputTextFieldHostState: SnackbarHostState): Cmd
 
     /**
      * Mutable method. Returns list of [AppModel.shapes] plus [shape]
@@ -60,7 +64,7 @@ data class AppModel(
             Matrix.init(
                 maxRectangle.x2 + 1,
                 maxRectangle.y2 + 1,
-                AsciiChar.Char(Ascii.SPACE)
+                AsciiChar.Space
             )
         )
         ascii.mergeToMatrix(this.shapes.map(ShapeWithID::shape))

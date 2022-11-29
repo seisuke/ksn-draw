@@ -11,8 +11,10 @@ import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.layout.wrapContentSize
+import androidx.compose.material.Button
 import androidx.compose.material.Card
 import androidx.compose.material.MaterialTheme
+import androidx.compose.material.OutlinedTextField
 import androidx.compose.material.SnackbarHost
 import androidx.compose.material.Text
 import androidx.compose.material.lightColors
@@ -20,7 +22,10 @@ import androidx.compose.runtime.Composable
 import androidx.compose.runtime.CompositionLocalProvider
 import androidx.compose.runtime.compositionLocalOf
 import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.remember
 import androidx.compose.runtime.rememberCoroutineScope
+import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.unit.Dp
@@ -77,6 +82,8 @@ fun mainView() {
     val element = ModelElement.current
     val typeface by element.mapAsState(AppModel::typeface)
     val snackbarHostState by element.mapAsState(AppModel::snackbarHostState)
+    val inputTextFieldHostState by element.mapAsState(AppModel::inputTextFieldHostState)
+
     Box (
         modifier = Modifier.fillMaxSize()
     ){
@@ -96,6 +103,37 @@ fun mainView() {
                     horizontalAlignment = Alignment.CenterHorizontally
                 ) {
                     Text(text = snackbarData.message)
+                }
+            }
+        }
+
+        SnackbarHost(
+            hostState = inputTextFieldHostState,
+            modifier = Modifier.align(Alignment.TopEnd)
+        ) { snackbarData ->
+            var text by remember { mutableStateOf(snackbarData.message) }
+            Card(
+                shape = MaterialTheme.shapes.small,
+                modifier = Modifier
+                    .padding(16.dp)
+            ) {
+                Column {
+                    OutlinedTextField(
+                        value = text,
+                        onValueChange = {
+                            text = it
+                            element.accept(
+                                AppModel.TextBoxUpdate(it)
+                            )
+                        }
+                    )
+                    Button(
+                        onClick = {
+                            snackbarData.dismiss()
+                        }
+                    ) {
+
+                    }
                 }
             }
         }

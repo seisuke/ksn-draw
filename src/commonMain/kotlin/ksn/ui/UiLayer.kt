@@ -84,9 +84,7 @@ private fun createUiType(
     dragStatus: SkiaDragStatus,
 ): List<UiType> = when (tool) {
     is Tool.Select -> {
-        val selectedShape = SelectedShape(
-            shapes.map { it.shape.translate(drag).toSkiaRect() }
-        )
+        val selectedShape = selectedShape(shapes, drag)
         if (dragStatus == SkiaDragStatus.Zero || tool.moving) {
             listOf(selectedShape)
         } else {
@@ -96,9 +94,11 @@ private fun createUiType(
             )
         }
     }
-    is Tool.Rect -> {
+    is Tool.Rect,
+    is Tool.Text -> {
         if (dragStatus == SkiaDragStatus.Zero) {
-            emptyList()
+            val selectedShape = selectedShape(shapes, drag)
+            listOf(selectedShape)
         } else {
             val rect = dragStatus.toDragStatus().toKsnRect()
             listOf(
@@ -108,7 +108,8 @@ private fun createUiType(
     }
     is Tool.Line -> {
         if (dragStatus == SkiaDragStatus.Zero) {
-            emptyList()
+            val selectedShape = selectedShape(shapes, drag)
+            listOf(selectedShape)
         } else {
             val line = dragStatus.toDragStatus().toKsnLine()
             listOf(
@@ -118,6 +119,16 @@ private fun createUiType(
     }
 
     else -> emptyList()
+}
+
+private fun selectedShape(
+    shapes: List<ShapeWithID>,
+    drag: Point
+): SelectedShape {
+    val selectedShape = SelectedShape(
+        shapes.map { it.shape.translate(drag).toSkiaRect() }
+    )
+    return selectedShape
 }
 
 private fun Canvas.drawByUiType(
@@ -190,7 +201,7 @@ private fun shapeToAscii(shape: Shape): Ascii {
         Matrix.init(
             shape.width,
             shape.height,
-            AsciiChar.Char(Ascii.SPACE)
+            AsciiChar.Space
         )
     )
     val noOffsetRect = shape.translate(

@@ -5,6 +5,9 @@ sealed class AsciiChar {
 
     data class Char(override val value: String) : AsciiChar()
     object FullWidthSpace: AsciiChar() {
-        override val value = "  "
+        override val value = ""
+    }
+    object Space: AsciiChar() {
+        override val value = " "
     }
 }

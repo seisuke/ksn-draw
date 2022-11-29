@@ -2,12 +2,14 @@ package ksn.update
 
 import elm.None
 import elm.Pure
+import elm.Sub
 import elm.plus
 import ksn.model.Point
 import ksn.model.RTreeEntry
 import ksn.model.Tool
 import ksn.model.minus
 import ksn.model.shape.Shape
+import ksn.model.shape.TextBox
 import ksn.toKsnLine
 import ksn.toKsnRect
 import ksn.toRTreeRectangle
@@ -77,7 +79,7 @@ data class DragStatus(
         fun handleDragEnd(
             model: AppModel,
             msg: DragEnd
-        ): Pure<AppModel> {
+        ): Sub<AppModel, Cmd> {
             return when (model.tool) {
                 is Tool.Rect -> {
                     val id = model.maxId.getAndIncrement()
@@ -88,6 +90,14 @@ data class DragStatus(
                     val id = model.maxId.getAndIncrement()
                     val line = msg.dragStatus.toKsnLine()
                     model.returnUpdateModel(id, line) + None
+                }
+                is Tool.Text -> {
+                    val id = model.maxId.getAndIncrement()
+                    val rect = msg.dragStatus.toKsnRect()
+                    val textBox = TextBox(rect, "TEXT")
+                    model.returnUpdateModel(id, textBox).copy(
+                        selectShapeIdList = listOf(id)
+                    ) + AppModel.ShowTextFieldCmd(rect, model.inputTextFieldHostState)
                 }
                 is Tool.Select -> if (model.tool.moving) {
                     val (shapes, rtree) = moveShapeAndRTree(model, msg.dragStatus.dragValue)
