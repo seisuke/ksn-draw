@@ -1,8 +1,8 @@
 package ksn.ascii
 
 class Matrix<T> private constructor(
-    private val width: Int,
-    private val height: Int,
+    val width: Int,
+    val height: Int,
     initialValue: List<T>
 ) {
     var initial: T? = null
@@ -44,22 +44,7 @@ class Matrix<T> private constructor(
         array.addAll(index(x, y), value)
     }
 
-    fun merge(other: Matrix<T>, offsetX: Int, offsetY: Int) {
-        other.withPoint().forEach { (x, y, value) ->
-            if (x + offsetX < 0 || y + offsetY < 0) {
-                return@forEach
-            }
-            if (x + offsetX >= this.width || y + offsetY >= this.height ) {
-                return@forEach
-            }
-
-            set(x + offsetX, y + offsetY, value)
-        }
-    }
-
-    private fun index(x: Int, y: Int) = x + y * width
-
-    private fun withPoint() = iterator {
+    fun withPoint() = iterator {
         var x = 0
         var y = 0
         array.forEach {
@@ -71,6 +56,8 @@ class Matrix<T> private constructor(
             }
         }
     }
+
+    private fun index(x: Int, y: Int) = x + y * width
 
     companion object {
         fun <T> init(

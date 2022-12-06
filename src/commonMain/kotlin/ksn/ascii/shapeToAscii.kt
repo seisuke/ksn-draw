@@ -8,7 +8,7 @@ import ksn.model.shape.TextBox
 import kotlin.math.ceil
 
 fun Rect.toAsciiMatrix(): Matrix<AsciiChar> {
-    val matrix = Matrix.init<AsciiChar>(width, height, AsciiChar.Space)
+    val matrix = Matrix.init<AsciiChar>(width, height, AsciiChar.Transparent)
     this.toPointList()
         .toBoundingPointsList()
         .filterIsInstance<Edge>()
@@ -18,7 +18,7 @@ fun Rect.toAsciiMatrix(): Matrix<AsciiChar> {
         }
         .complementStroke()
         .forEach { (point, boundingType) ->
-            matrix.set(point.x, point.y, AsciiChar.Char(boundingType.char))
+            matrix.set(point.x, point.y, AsciiChar.Bounding(boundingType))
         }
     return matrix
 }
@@ -46,7 +46,7 @@ fun TextBox.toAsciiMatrix(): Matrix<AsciiChar> {
 }
 
 fun Line.toAsciiMatrix(): Matrix<AsciiChar> {
-    val matrix = Matrix.init<AsciiChar>(width, height, AsciiChar.Space)
+    val matrix = Matrix.init<AsciiChar>(width, height, AsciiChar.Transparent)
     val landscape = width > height
     val boundingList = this.toPointList(landscape)
         .toBoundingPointsList()
@@ -54,21 +54,21 @@ fun Line.toAsciiMatrix(): Matrix<AsciiChar> {
     val boxDrawing = boundingList.complementStroke() + boundingList.last()
 
     boxDrawing.forEach { (point, boundingType) ->
-        matrix.set(point.x, point.y, AsciiChar.Char(boundingType.char))
+        matrix.set(point.x, point.y, AsciiChar.Bounding(boundingType))
     }
 
     val point = boxDrawing.last().point
     val triangle = if (width > height) {
         if (point.x == 0) {
-            BoundingType.LEFT_TRIANGLE
+            Triangle.LEFT_TRIANGLE
         } else {
-            BoundingType.RIGHT_TRIANGLE
+            Triangle.RIGHT_TRIANGLE
         }
     } else {
         if (point.y == 0) {
-            BoundingType.UP_TRIANGLE
+            Triangle.UP_TRIANGLE
         } else {
-            BoundingType.DOWN_TRIANGLE
+            Triangle.DOWN_TRIANGLE
         }
     }
     matrix.set(point.x, point.y, AsciiChar.Char(triangle.char))
