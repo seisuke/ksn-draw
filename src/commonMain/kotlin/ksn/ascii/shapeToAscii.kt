@@ -4,12 +4,19 @@ import ksn.model.Point
 import ksn.model.minus
 import ksn.model.shape.Line
 import ksn.model.shape.Rect
+import ksn.model.shape.Shape
 import ksn.model.shape.TextBox
 import kotlin.math.ceil
 
-fun Rect.toAsciiMatrix(): Matrix<AsciiChar> {
-    val matrix = Matrix.init<AsciiChar>(width, height, AsciiChar.Transparent)
-    this.toPointList()
+fun Shape.toAsciiMatrix(): Matrix<AsciiChar> = when (this) {
+    is Rect -> toAsciiMatrix(this)
+    is Line -> toAsciiMatrix(this)
+    is TextBox -> toAsciiMatrix(this)
+}
+
+private fun toAsciiMatrix(rect: Rect): Matrix<AsciiChar> {
+    val matrix = Matrix.init<AsciiChar>(rect.width, rect.height, AsciiChar.Transparent)
+    rect.toPointList()
         .toBoundingPointsList()
         .filterIsInstance<Edge>()
         .map(::toBounding)
@@ -23,12 +30,12 @@ fun Rect.toAsciiMatrix(): Matrix<AsciiChar> {
     return matrix
 }
 
-fun TextBox.toAsciiMatrix(): Matrix<AsciiChar> {
-    val matrix = rect.toAsciiMatrix()
+private fun toAsciiMatrix(textBox: TextBox): Matrix<AsciiChar> {
+    val matrix = textBox.rect.toAsciiMatrix()
     var offset = 0
     var x = 1
     var y = 1
-    text.forEach { char ->
+    textBox.text.forEach { char ->
         if (char == '\n') {
             offset = 0
             x = 1
@@ -45,10 +52,10 @@ fun TextBox.toAsciiMatrix(): Matrix<AsciiChar> {
     return matrix
 }
 
-fun Line.toAsciiMatrix(): Matrix<AsciiChar> {
-    val matrix = Matrix.init<AsciiChar>(width, height, AsciiChar.Transparent)
-    val landscape = width > height
-    val boundingList = this.toPointList(landscape)
+private fun toAsciiMatrix(line: Line): Matrix<AsciiChar> {
+    val matrix = Matrix.init<AsciiChar>(line.width, line.height, AsciiChar.Transparent)
+    val landscape = line.width > line.height
+    val boundingList = line.toPointList(landscape)
         .toBoundingPointsList()
         .map(::toBounding)
     val boxDrawing = boundingList.complementStroke() + boundingList.last()
@@ -58,7 +65,7 @@ fun Line.toAsciiMatrix(): Matrix<AsciiChar> {
     }
 
     val point = boxDrawing.last().point
-    val triangle = if (width > height) {
+    val triangle = if (line.width > line.height) {
         if (point.x == 0) {
             Triangle.LEFT_TRIANGLE
         } else {
