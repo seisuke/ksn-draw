@@ -14,6 +14,12 @@ enum class BoundingType(val char: String) {
     DOWN_AND_LEFT("┐"),
     UP_AND_LEFT("┘"),
     UP_AND_RIGHT("└"),
+    VERTICAL_AND_HORIZONTAL("┼"),
+    DOWN_AND_HORIZONTAL("┬"),
+    UP_AND_HORIZONTAL("┴"),
+    VERTICAL_AND_LEFT("┤"),
+    VERTICAL_AND_RIGHT("├"),
+
 }
 
 enum class Triangle(val char: String) {

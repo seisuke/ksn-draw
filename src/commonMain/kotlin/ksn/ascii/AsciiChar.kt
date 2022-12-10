@@ -1,7 +1,16 @@
 package ksn.ascii
 
+import ksn.ascii.BoundingType.DOWN_AND_HORIZONTAL
+import ksn.ascii.BoundingType.DOWN_AND_LEFT
+import ksn.ascii.BoundingType.DOWN_AND_RIGHT
 import ksn.ascii.BoundingType.HORIZONTAL
+import ksn.ascii.BoundingType.UP_AND_HORIZONTAL
+import ksn.ascii.BoundingType.UP_AND_LEFT
+import ksn.ascii.BoundingType.UP_AND_RIGHT
 import ksn.ascii.BoundingType.VERTICAL
+import ksn.ascii.BoundingType.VERTICAL_AND_HORIZONTAL
+import ksn.ascii.BoundingType.VERTICAL_AND_LEFT
+import ksn.ascii.BoundingType.VERTICAL_AND_RIGHT
 
 sealed class AsciiChar {
     abstract val value: String
@@ -13,14 +22,23 @@ sealed class AsciiChar {
             get() = boundingType.char
 
         operator fun plus(other: Bounding): AsciiChar = when {
-            this.boundingType == VERTICAL && other.boundingType == HORIZONTAL -> {
-                Char("┼")
-            }
-            this.boundingType == HORIZONTAL && other.boundingType == VERTICAL -> {
-                Char("┼")
-            }
-            else -> other
+            eitherEqual(this, other, VERTICAL, HORIZONTAL) -> Bounding(VERTICAL_AND_HORIZONTAL)
+            eitherEqual(this, other, UP_AND_LEFT, DOWN_AND_RIGHT) -> Bounding(VERTICAL_AND_HORIZONTAL)
+            eitherEqual(this, other, UP_AND_RIGHT, DOWN_AND_LEFT) -> Bounding(VERTICAL_AND_HORIZONTAL)
+            eitherEqual(this, other, HORIZONTAL, DOWN_AND_LEFT) -> Bounding(DOWN_AND_HORIZONTAL)
+            eitherEqual(this, other, HORIZONTAL, DOWN_AND_RIGHT) -> Bounding(DOWN_AND_HORIZONTAL)
+            eitherEqual(this, other, HORIZONTAL, UP_AND_LEFT) -> Bounding(UP_AND_HORIZONTAL)
+            eitherEqual(this, other, HORIZONTAL, UP_AND_RIGHT) -> Bounding(UP_AND_HORIZONTAL)
+            eitherEqual(this, other, VERTICAL, UP_AND_LEFT) -> Bounding(VERTICAL_AND_LEFT)
+            eitherEqual(this, other, VERTICAL, DOWN_AND_LEFT) -> Bounding(VERTICAL_AND_LEFT)
+            eitherEqual(this, other, VERTICAL, UP_AND_RIGHT) -> Bounding(VERTICAL_AND_RIGHT)
+            eitherEqual(this, other, VERTICAL, DOWN_AND_RIGHT) -> Bounding(VERTICAL_AND_RIGHT)
+            else -> this
         }
+
+        private fun eitherEqual(a: Bounding, b: Bounding, aType: BoundingType, bType: BoundingType) =
+            (a.boundingType == aType && b.boundingType == bType) || (a.boundingType == bType && b.boundingType == aType)
+
     }
 
     object FullWidthSpace: AsciiChar() {
