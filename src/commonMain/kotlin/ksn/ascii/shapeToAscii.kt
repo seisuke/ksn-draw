@@ -1,5 +1,7 @@
 package ksn.ascii
 
+import io.github.seisuke.kemoji.EmojiParser
+import io.github.seisuke.kemoji.TextOrSpan
 import ksn.model.Point
 import ksn.model.minus
 import ksn.model.shape.Line
@@ -35,19 +37,32 @@ private fun toAsciiMatrix(textBox: TextBox): Matrix<AsciiChar> {
     var offset = 0
     var x = 1
     var y = 1
-    textBox.text.forEach { char ->
-        if (char == '\n') {
-            offset = 0
-            x = 1
-            y++
-            return@forEach
+
+    EmojiParser.parseToSpanList(textBox.text) {
+        AsciiChar.Emoji
+    }.forEach {
+        when(it) {
+            is TextOrSpan.Span -> {
+                matrix.set(x + offset, y, AsciiChar.Emoji)
+                offset++
+                matrix.set( x + offset, y, AsciiChar.FullWidthSpace)
+                x++
+            }
+            is TextOrSpan.Text -> it.text.forEach { char ->
+                if (char == '\n') {
+                    offset = 0
+                    x = 1
+                    y++
+                    return@forEach
+                }
+                matrix.set( x + offset, y, AsciiChar.Char(char.toString()))
+                if (char.isFullWidth()) {
+                    offset++
+                    matrix.set( x + offset, y, AsciiChar.FullWidthSpace)
+                }
+                x++
+            }
         }
-        matrix.set( x + offset, y, AsciiChar.Char(char.toString()))
-        if (char.isFullWidth()) {
-            offset++
-            matrix.set( x + offset, y, AsciiChar.FullWidthSpace)
-        }
-        x++
     }
     return matrix
 }

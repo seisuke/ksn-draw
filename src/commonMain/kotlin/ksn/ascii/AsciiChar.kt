@@ -1,5 +1,6 @@
 package ksn.ascii
 
+import io.github.seisuke.kemoji.Emoji as Kemoji
 import ksn.ascii.BoundingType.DOWN_AND_HORIZONTAL
 import ksn.ascii.BoundingType.DOWN_AND_LEFT
 import ksn.ascii.BoundingType.DOWN_AND_RIGHT
@@ -39,6 +40,10 @@ sealed class AsciiChar {
         private fun eitherEqual(a: Bounding, b: Bounding, aType: BoundingType, bType: BoundingType) =
             (a.boundingType == aType && b.boundingType == bType) || (a.boundingType == bType && b.boundingType == aType)
 
+    }
+    object Emoji : AsciiChar() {
+        override val value: String
+            get() = "  "
     }
 
     object FullWidthSpace: AsciiChar() {

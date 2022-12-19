@@ -40,6 +40,7 @@ kotlin {
                 implementation(compose.material)
                 implementation(compose.runtime)
                 implementation("org.jetbrains.kotlinx:atomicfu:0.17.3")
+                implementation("io.github.seisuke:kemoji:0.2.0")
             }
         }
 
