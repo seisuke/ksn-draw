@@ -68,7 +68,12 @@ data class AppModel(
             )
         )
         ascii.mergeToMatrix(this.shapes.map(ShapeWithID::shape))
-        val output = ascii.render(AsciiChar::value).joinToString(separator = "\n")
+        val output = ascii.render {
+            when(it) {
+                is AsciiChar.Emoji -> { it.emoji.emoji }
+                else -> it.value
+            }
+        }.joinToString(separator = "\n")
         clipBoard.setText(
             AnnotatedString(output)
         )
