@@ -39,11 +39,12 @@ private fun toAsciiMatrix(textBox: TextBox): Matrix<AsciiChar> {
     var y = 1
 
     EmojiParser.parseToSpanList(textBox.text) {
-        AsciiChar.Emoji
+        it.emoji
     }.forEach {
         when(it) {
             is TextOrSpan.Span -> {
-                matrix.set(x + offset, y, AsciiChar.Emoji)
+                val emoji = AsciiChar.Emoji(it.box, x + offset, y)
+                matrix.set(x + offset, y, emoji)
                 offset++
                 matrix.set( x + offset, y, AsciiChar.FullWidthSpace)
                 x++

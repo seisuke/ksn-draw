@@ -41,7 +41,12 @@ sealed class AsciiChar {
             (a.boundingType == aType && b.boundingType == bType) || (a.boundingType == bType && b.boundingType == aType)
 
     }
-    object Emoji : AsciiChar() {
+
+    data class Emoji(
+        val emoji: Kemoji,
+        val x: Int,
+        val y: Int
+    ) : AsciiChar() {
         override val value: String
             get() = "  "
     }

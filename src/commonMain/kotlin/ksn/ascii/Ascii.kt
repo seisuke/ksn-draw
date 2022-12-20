@@ -29,8 +29,16 @@ class Ascii(
             if (x >= this.width || y >= this.height ) {
                 return@forEach
             }
-            val oldValue = get(x, y)
-            set(x, y, oldValue + value)
+
+            when (value) {
+                is AsciiChar.Emoji -> {
+                    set(x, y, value.copy(x = x, y = y))
+                }
+                else -> {
+                    val oldValue = get(x, y)
+                    set(x, y, oldValue + value)
+                }
+            }
         }
     }
 
