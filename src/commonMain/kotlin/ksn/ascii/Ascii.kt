@@ -17,10 +17,7 @@ class Ascii(
     }
 
     fun Matrix<AsciiChar>.merge(other: Matrix<AsciiChar>, offsetX: Int, offsetY: Int) {
-        other.withPoint().forEach { (otherX, otherY, value) ->
-            if (value == AsciiChar.Transparent) {
-                return@forEach
-            }
+        other.withPoint().forEach { (otherX, otherY, asciiChar) ->
             val x = otherX + offsetX
             val y = otherY + offsetY
             if (x < 0 || y < 0) {
@@ -30,13 +27,15 @@ class Ascii(
                 return@forEach
             }
 
-            when (value) {
+            // TODO fix problem how to display overlaped 2 width character
+            when (asciiChar) {
+                is AsciiChar.Transparent -> Unit
                 is AsciiChar.Emoji -> {
-                    set(x, y, value.copy(x = x, y = y))
+                    set(x, y, asciiChar.copy(x = x, y = y))
                 }
                 else -> {
                     val oldValue = get(x, y)
-                    set(x, y, oldValue + value)
+                    set(x, y, oldValue + asciiChar)
                 }
             }
         }

@@ -1,5 +1,6 @@
 package ksn.ascii
 
+import androidx.compose.animation.slideOutHorizontally
 import io.github.seisuke.kemoji.Emoji as Kemoji
 import ksn.ascii.BoundingType.DOWN_AND_HORIZONTAL
 import ksn.ascii.BoundingType.DOWN_AND_LEFT
@@ -15,12 +16,22 @@ import ksn.ascii.BoundingType.VERTICAL_AND_RIGHT
 
 sealed class AsciiChar {
     abstract val value: String
+    open val width: Int = 1
 
-    data class Char(override val value: String) : AsciiChar()
+    data class Char(
+        override val value: String,
+        private val fullWidth: Boolean = false
+    ) : AsciiChar() {
+        override val width: Int
+            get() = if (fullWidth) {
+                2
+            } else {
+                1
+            }
+    }
 
     data class Bounding(val boundingType: BoundingType) : AsciiChar() {
-        override val value: String
-            get() = boundingType.char
+        override val value: String = boundingType.char
 
         operator fun plus(other: Bounding): AsciiChar = when {
             eitherEqual(this, other, VERTICAL, HORIZONTAL) -> Bounding(VERTICAL_AND_HORIZONTAL)
@@ -47,12 +58,13 @@ sealed class AsciiChar {
         val x: Int,
         val y: Int
     ) : AsciiChar() {
-        override val value: String
-            get() = "  "
+        override val value: String = "  "
+        override val width: Int = 2
     }
 
     object FullWidthSpace: AsciiChar() {
         override val value = ""
+        override val width: Int = 0
     }
     object Space: AsciiChar() {
         override val value = " "
@@ -64,5 +76,8 @@ sealed class AsciiChar {
 
 operator fun AsciiChar.plus(other: AsciiChar): AsciiChar = when {
     this is AsciiChar.Bounding && other is AsciiChar.Bounding -> this + other
+    this is AsciiChar.Char && other is AsciiChar.Char -> other
+    this is AsciiChar.Char -> this
+    this is AsciiChar.FullWidthSpace -> this
     else -> other
 }

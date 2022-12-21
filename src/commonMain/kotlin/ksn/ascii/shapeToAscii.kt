@@ -56,7 +56,7 @@ private fun toAsciiMatrix(textBox: TextBox): Matrix<AsciiChar> {
                     y++
                     return@forEach
                 }
-                matrix.set( x + offset, y, AsciiChar.Char(char.toString()))
+                matrix.set( x + offset, y, AsciiChar.Char(char.toString(), char.isFullWidth()))
                 if (char.isFullWidth()) {
                     offset++
                     matrix.set( x + offset, y, AsciiChar.FullWidthSpace)
