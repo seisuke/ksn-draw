@@ -45,7 +45,7 @@ class RTreeTest {
             entries
         )
         val result = tree.nearest(Point(3,3), 10.0, 3).toList()
-        assertEquals(result.size, 3)
+        assertEquals(3, result.size)
     }
 
     @Test
@@ -55,7 +55,7 @@ class RTreeTest {
             entries
         )
         val result = tree.nearest(Point(3,3), 2.0, 10).toList()
-        assertEquals(result.size, 3)
+        assertEquals(3, result.size)
     }
 
     @Test
@@ -71,13 +71,22 @@ class RTreeTest {
         )
 
         val result1 = tree.search(Rectangle(1, 1, 1, 1)).toList()
-        assertEquals(result1.map { it.value }, listOf(1, 3))
+        assertEquals(
+            listOf(1, 3),
+            result1.map { it.value },
+        )
 
         val result2 = tree.search(Rectangle(4, 4, 7, 7)).toList()
-        assertEquals(result2.map { it.value }, listOf(3))
+        assertEquals(
+            listOf(3),
+            result2.map { it.value },
+        )
 
         val result3 = tree.search(Rectangle(0, 0, 5, 5)).toList()
-        assertEquals(result3.map { it.value }, listOf(1, 2, 3))
+        assertEquals(
+            listOf(1, 2, 3),
+            result3.map { it.value },
+        )
     }
 
     @Test

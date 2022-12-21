@@ -10,32 +10,29 @@ class AsciiTest {
     @Test
     fun lineMatrix1() {
         val line = Line(
-            1L,
             Point(2, 6),
             Point(7, 8),
         )
         val text = convertTextList(line)
 
         assertEquals(
-            text,
             listOf(
                 "──┐   ",
                 "  │   ",
                 "  └──▶"
-            )
+            ),
+            text,
         )
     }
 
     @Test
     fun lineMatrixPortrait1() {
         val line = Line(
-            1L,
             Point(2, 8),
             Point(7, 3),
         )
         val text = convertTextList(line)
         assertEquals(
-            text,
             listOf(
                 "     ▲",
                 "     │",
@@ -43,20 +40,19 @@ class AsciiTest {
                 "│     ",
                 "│     ",
                 "│     ",
-            )
+            ),
+            text,
         )
     }
 
     @Test
     fun lineMatrixPortrait2() {
         val line = Line(
-            1L,
             Point(7, 8),
             Point(2, 3),
         )
         val text = convertTextList(line)
         assertEquals(
-            text,
             listOf(
                 "▲     ",
                 "│     ",
@@ -64,20 +60,19 @@ class AsciiTest {
                 "     │",
                 "     │",
                 "     │",
-            )
+            ),
+            text,
         )
     }
 
     @Test
     fun lineMatrixPortrait3() {
         val line = Line(
-            1L,
             Point(7, 3),
             Point(2, 8),
         )
         val text = convertTextList(line)
         assertEquals(
-            text,
             listOf(
                 "     │",
                 "     │",
@@ -85,50 +80,48 @@ class AsciiTest {
                 "│     ",
                 "│     ",
                 "▼     ",
-            )
+            ),
+            text,
         )
     }
 
     @Test
     fun lineMatrixStraight1() {
         val line = Line(
-            1L,
             Point(4, 7),
             Point(7, 7),
         )
         val text = convertTextList(line)
 
         assertEquals(
-            text,
             listOf(
                 "───▶",
-            )
+            ),
+            text,
         )
     }
 
     @Test
     fun lineMatrixStraight2() {
         val line = Line(
-            1L,
             Point(4, 6),
             Point(4, 4),
         )
         val text = convertTextList(line)
 
         assertEquals(
-            text,
             listOf(
                 "▲",
                 "│",
                 "│",
-            )
+            ),
+            text,
         )
     }
 
     @Test
     fun overhangShape1() {
         val rect = Rect(
-            1L,
             2,
             -1,
             4,
@@ -136,20 +129,20 @@ class AsciiTest {
         )
 
         val ascii = Ascii(
-            Matrix.init(5, 5, AsciiChar.Char(" "))
+            Matrix.init(5, 5, AsciiChar.Transparent)
         )
         ascii.mergeToMatrix(listOf(rect))
         val text = ascii.matrix.joinToString { it.value }
 
         assertEquals(
-            text,
             listOf(
                 "  │ │",
                 "  └─┘",
                 "     ",
                 "     ",
                 "     ",
-            )
+            ),
+            text,
         )
     }
 
