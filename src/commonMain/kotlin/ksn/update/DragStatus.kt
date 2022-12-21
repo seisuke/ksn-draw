@@ -41,7 +41,7 @@ data class DragStatus(
             model: AppModel,
             msg: DragStart
         ): Pure<AppModel> {
-            if (model.selectShapeIdList.isEmpty()) {
+            if (model.selectShapeIdSet.isEmpty()) {
                 return model + None
             }
             val point = msg.dragStatus.start
@@ -52,8 +52,7 @@ data class DragStatus(
                 )
             ).map { it.value }
 
-            // TODO fix intersect to improve performance
-            return if (shapeIdList.intersect(model.selectShapeIdList).isNotEmpty()) {
+            return if (shapeIdList.intersect(model.selectShapeIdSet).isNotEmpty()) {
                 model.copy(
                     tool = Tool.Select(true)
                 ) + None
@@ -96,7 +95,7 @@ data class DragStatus(
                     val rect = msg.dragStatus.toKsnRect()
                     val textBox = TextBox(rect, "TEXT")
                     model.returnUpdateModel(id, textBox).copy(
-                        selectShapeIdList = listOf(id)
+                        selectShapeIdSet = setOf(id)
                     ) + AppModel.ShowTextFieldCmd(rect, model.inputTextFieldHostState)
                 }
                 is Tool.Select -> if (model.tool.moving) {
@@ -110,10 +109,10 @@ data class DragStatus(
                 } else {
                     val rTreeRect = msg.dragStatus.toRTreeRectangle()
                     val result = model.rtree.search(rTreeRect).toList()
-                    val selectedIdList = result.map { it.value }
+                    val selectedIdSet = result.map { it.value }.toSet()
                     model.copy(
                         tool = Tool.Select(),
-                        selectShapeIdList = selectedIdList,
+                        selectShapeIdSet = selectedIdSet,
                         drag = Point.Zero
                     ) + None
                 }
@@ -139,7 +138,7 @@ data class DragStatus(
         private fun moveShapeAndRTree(model: AppModel, dragValue: Point): Pair<List<ShapeWithID>, RTree<Long, Rectangle>> {
             val rtreeTranslate = mutableListOf<Translate>()
             val shapes = model.shapes.map { (id, shape) ->
-                if (model.selectShapeIdList.contains(id)) {
+                if (model.selectShapeIdSet.contains(id)) {
                     val newShape = shape.translate(dragValue)
                     rtreeTranslate.add(
                         Translate(

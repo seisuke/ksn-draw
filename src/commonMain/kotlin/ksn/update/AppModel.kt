@@ -20,7 +20,7 @@ data class AppModel(
     val tool: Tool,
     val maxId: AtomicLong,
     val shapes: List<ShapeWithID> = emptyList(),
-    val selectShapeIdList: List<Long> = emptyList(),
+    val selectShapeIdSet: Set<Long> = emptySet(),
     val rtree: RTree<Long, Rectangle> = RTree.create(
         emptyList()
     ),
@@ -48,12 +48,12 @@ data class AppModel(
     }
 
     fun selectedShapes(): List<ShapeWithID> {
-        if (selectShapeIdList.isEmpty()) {
+        if (selectShapeIdSet.isEmpty()) {
             return emptyList()
         }
 
         return shapes.filter { shape ->
-            selectShapeIdList.contains(shape.id)
+            selectShapeIdSet.contains(shape.id)
         }
     }
 

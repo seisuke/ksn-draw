@@ -14,18 +14,18 @@ class KeyMsg(val key: Key) : Msg {
 
         @OptIn(ExperimentalComposeUiApi::class)
         fun handleKeyMsg(model: AppModel, key: Key): Sub<AppModel, Cmd> {
-            return if (key == Key.Backspace && model.selectShapeIdList.isNotEmpty()) {
+            return if (key == Key.Backspace && model.selectShapeIdSet.isNotEmpty()) {
                 val entries = model.selectedShapes().map { (id, shape) ->
                     RTreeEntry(id, shape.toRTreeRectangle())
                 }
                 val rtree = model.rtree.delete(entries)
                 val shapes = model.shapes.filter { shape ->
-                    !model.selectShapeIdList.contains(shape.id)
+                    !model.selectShapeIdSet.contains(shape.id)
                 }
                 model.copy(
                     shapes = shapes,
                     rtree = rtree,
-                    selectShapeIdList = emptyList(),
+                    selectShapeIdSet = emptySet(),
                 ) + None
             } else {
                 model + None

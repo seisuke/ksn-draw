@@ -26,7 +26,7 @@ class AppModelUpdate : Update<AppModel, Msg, Cmd> {
         }
         is AppModel.ShowSnackBar -> model + AppModel.ShowSnackBarCmd(msg.message, model.snackbarHostState)
         is AppModel.TextBoxUpdate -> {
-            val selectedId = model.selectShapeIdList.first()
+            val selectedId = model.selectShapeIdSet.first()
             val newShapes = model.shapes.map { shapeWithID ->
                 if (shapeWithID.id == selectedId && shapeWithID.shape is TextBox) {
                     ShapeWithID(
