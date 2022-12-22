@@ -7,6 +7,7 @@ import androidx.compose.ui.unit.Dp
 import ksn.ModelElement
 import ksn.ascii.Ascii
 import ksn.ascii.AsciiRenderer
+import ksn.model.DragType
 import ksn.update.AppModel
 
 @Composable
@@ -18,8 +19,15 @@ fun AsciiLayer(
     val element = ModelElement.current
     val shapes by element.mapAsState { model ->
         model.shapes.map { (id, shape) ->
-            if (model.selectShapeIdSet.contains(id)) {
-                shape.translate(model.drag)
+            if (model.selectShapeIdSet.contains(id)) { //TODO move to Shape#drag
+                when (val dragType = model.dragType) {
+                    is DragType.DragMoving -> shape.translate(dragType.point)
+                    is DragType.DragResize -> shape.resize(
+                        dragType.point,
+                        dragType.handlePosition
+                    )
+                    else -> shape
+                }
             } else {
                 shape
             }

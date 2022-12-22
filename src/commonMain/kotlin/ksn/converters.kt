@@ -4,10 +4,10 @@ import androidx.compose.ui.geometry.Offset
 import ksn.Constants.Companion.GRID_WIDTH
 import ksn.model.Point
 import ksn.model.shape.Line
-import ksn.model.shape.Rect
 import ksn.model.shape.Shape
 import ksn.ui.SkiaDragStatus
 import ksn.update.DragStatus
+import ksn.model.shape.Rect as KsnRect
 import org.jetbrains.skia.Rect as SkiaRect
 import rtree.Rectangle as RTreeRectangle
 
@@ -47,9 +47,9 @@ fun DragStatus.toRTreeRectangle(): RTreeRectangle {
     )
 }
 
-fun DragStatus.toKsnRect(): Rect {
+fun DragStatus.toKsnRect(): KsnRect {
     val (left, top, right ,bottom) = toDataRect()
-    return Rect(
+    return KsnRect(
         left,
         top,
         right,

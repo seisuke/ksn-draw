@@ -1,6 +1,16 @@
 package ksn.model.shape
 
 import ksn.Constants.Companion.GRID_WIDTH
+import ksn.model.DragType
+import ksn.model.HandlePosition
+import ksn.model.HandlePosition.CENTER_BOTTOM
+import ksn.model.HandlePosition.CENTER_TOP
+import ksn.model.HandlePosition.LEFT_BOTTOM
+import ksn.model.HandlePosition.LEFT_MIDDLE
+import ksn.model.HandlePosition.LEFT_TOP
+import ksn.model.HandlePosition.RIGHT_BOTTOM
+import ksn.model.HandlePosition.RIGHT_MIDDLE
+import ksn.model.HandlePosition.RIGHT_TOP
 import ksn.model.Point
 import ksn.model.plus
 import kotlin.math.max
@@ -20,6 +30,18 @@ sealed interface Shape {
     fun Int.toSkiaFloat(): Float = (this * GRID_WIDTH).toFloat()
 
     fun translate(point: Point): Shape
+
+    fun resize(point: Point, handlePosition: HandlePosition): Shape
+
+    //FIXME subclass type is removed
+    fun drag(dragType: DragType): Shape = when (dragType) {
+        is DragType.DragMoving -> translate(dragType.point)
+        is DragType.DragResize -> resize(
+            dragType.point,
+            dragType.handlePosition
+        )
+        else -> this
+    }
 }
 
 data class Rect(
@@ -37,6 +59,58 @@ data class Rect(
         right + point.x,
         bottom + point.y
     )
+
+    // TODO validate point
+    override fun resize(point: Point, handlePosition: HandlePosition): Shape = when (handlePosition) {
+        LEFT_TOP -> Rect(
+            left = left + point.x,
+            top = top + point.y,
+            right = right,
+            bottom = bottom,
+        )
+        LEFT_MIDDLE -> Rect(
+            left = left + point.x,
+            top = top,
+            right = right,
+            bottom = bottom,
+        )
+        LEFT_BOTTOM -> Rect(
+            left = left + point.x,
+            top = top,
+            right = right,
+            bottom = bottom + point.y,
+        )
+        CENTER_BOTTOM -> Rect(
+            left = left,
+            top = top,
+            right = right,
+            bottom = bottom + point.y,
+        )
+        RIGHT_BOTTOM -> Rect(
+            left = left,
+            top = top,
+            right = right + point.x,
+            bottom = bottom + point.y,
+        )
+        RIGHT_MIDDLE -> Rect(
+            left = left,
+            top = top,
+            right = right + point.x,
+            bottom = bottom,
+        )
+        RIGHT_TOP -> Rect(
+            left = left,
+            top = top + point.y,
+            right = right + point.x,
+            bottom = bottom,
+        )
+        CENTER_TOP -> Rect(
+            left = left,
+            top = top + point.y,
+            right = right,
+            bottom = bottom,
+        )
+    }
 }
 
 data class Line(
@@ -55,6 +129,8 @@ data class Line(
         start + point,
         end + point,
     )
+
+    override fun resize(point: Point, handlePosition: HandlePosition): Shape = this
 }
 
 data class TextBox(
@@ -63,12 +139,12 @@ data class TextBox(
 ): Shape by rect {
 
     override fun translate(point: Point): Shape = TextBox(
-        rect = Rect(
-            left + point.x,
-            top + point.y,
-            right + point.x,
-            bottom + point.y
-        ),
+        rect = rect.translate(point) as Rect,
+        text = text,
+    )
+
+    override fun resize(point: Point, handlePosition: HandlePosition): Shape = TextBox(
+        rect = rect.resize(point, handlePosition) as Rect,
         text = text,
     )
 }

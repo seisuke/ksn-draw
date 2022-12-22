@@ -7,7 +7,7 @@ import kotlinx.atomicfu.AtomicLong
 import ksn.ascii.Ascii
 import ksn.ascii.AsciiChar
 import ksn.ascii.Matrix
-import ksn.model.Point
+import ksn.model.DragType
 import ksn.model.Tool
 import ksn.model.shape.Rect
 import ksn.model.shape.Shape
@@ -24,7 +24,7 @@ data class AppModel(
     val rtree: RTree<Long, Rectangle> = RTree.create(
         emptyList()
     ),
-    val drag: Point = Point.Zero,
+    val dragType: DragType = DragType.Zero,
     val typeface: Typeface? = null,
     val snackbarHostState: SnackbarHostState = SnackbarHostState(),
     val inputTextFieldHostState: SnackbarHostState = SnackbarHostState(),

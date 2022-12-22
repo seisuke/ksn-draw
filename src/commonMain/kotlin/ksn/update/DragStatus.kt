@@ -4,15 +4,23 @@ import elm.None
 import elm.Pure
 import elm.Sub
 import elm.plus
+import ksn.model.DragType
 import ksn.model.Point
 import ksn.model.RTreeEntry
+import ksn.model.SelectState.Moving
+import ksn.model.SelectState.Resize
 import ksn.model.Tool
 import ksn.model.minus
 import ksn.model.shape.Shape
 import ksn.model.shape.TextBox
+import ksn.toDragStatus
 import ksn.toKsnLine
 import ksn.toKsnRect
 import ksn.toRTreeRectangle
+import ksn.toSkiaRect
+import ksn.ui.SkiaDragStatus
+import ksn.ui.createHandle
+import ksn.ui.inside
 import rtree.RTree
 import rtree.Rectangle
 import rtree.Point as RTreePoint
@@ -21,7 +29,7 @@ data class DragStatus(
     val start: Point,
     val end: Point,
 ) {
-    data class DragStart(val dragStatus: DragStatus): Msg
+    data class DragStart(val skiaDragStatus: SkiaDragStatus): Msg
     data class Drag(val dragStatus: DragStatus): Msg
     data class DragEnd(val dragStatus: DragStatus): Msg
 
@@ -41,23 +49,38 @@ data class DragStatus(
             model: AppModel,
             msg: DragStart
         ): Pure<AppModel> {
-            if (model.selectShapeIdSet.isEmpty()) {
-                return model + None
-            }
-            val point = msg.dragStatus.start
-            val shapeIdList = model.rtree.search(
-                RTreePoint(
-                    point.x,
-                    point.y
-                )
-            ).map { it.value }
+            return when {
+                model.selectShapeIdSet.isEmpty() -> model + None
+                model.selectShapeIdSet.size == 1 -> { //TODO can't move single shape
+                    val shape = model.selectedShapes().firstOrNull() ?: return model + None
+                    val (_, handlePosition) = shape.shape
+                        .toSkiaRect()
+                        .createHandle(10f)
+                        .firstOrNull { (rect, _) ->
+                            rect.inside(msg.skiaDragStatus.start)
+                        } ?: return model + None
+                    model.copy(
+                        tool = Tool.Select(Resize(handlePosition))
+                    ) + None
+                }
+                else -> {
+                    val dragStatus = msg.skiaDragStatus.toDragStatus()
+                    val point = dragStatus.start
+                    val shapeIdList = model.rtree.search(
+                        RTreePoint(
+                            point.x,
+                            point.y
+                        )
+                    ).map { it.value }
 
-            return if (shapeIdList.intersect(model.selectShapeIdSet).isNotEmpty()) {
-                model.copy(
-                    tool = Tool.Select(true)
-                ) + None
-            } else {
-                model + None
+                    if (shapeIdList.intersect(model.selectShapeIdSet).isNotEmpty()) {
+                        model.copy(
+                            tool = Tool.Select(Moving)
+                        ) + None
+                    } else {
+                        model + None
+                    }
+                }
             }
         }
 
@@ -65,13 +88,20 @@ data class DragStatus(
             model: AppModel,
             msg: Drag
         ): Pure<AppModel> {
-            return if (model.tool is Tool.Select && model.tool.moving)  {
-                val drag = msg.dragStatus.dragValue
-                model.copy(
-                    drag = drag,
-                ) + None
-            } else {
-                model + None
+            return when {
+                model.tool is Tool.Select && model.tool.state == Moving -> {
+                    val point = msg.dragStatus.dragValue
+                    model.copy(
+                        dragType = DragType.DragMoving(point),
+                    ) + None
+                }
+                model.tool is Tool.Select && model.tool.state is Resize -> {
+                    val point = msg.dragStatus.dragValue
+                    model.copy(
+                        dragType = DragType.DragResize(point, model.tool.state.handlePosition)
+                    ) + None
+                }
+                else -> model + None
             }
         }
 
@@ -98,23 +128,39 @@ data class DragStatus(
                         selectShapeIdSet = setOf(id)
                     ) + AppModel.ShowTextFieldCmd(rect, model.inputTextFieldHostState)
                 }
-                is Tool.Select -> if (model.tool.moving) {
-                    val (shapes, rtree) = moveShapeAndRTree(model, msg.dragStatus.dragValue)
-                    model.copy(
-                        tool = Tool.Select(),
-                        shapes = shapes,
-                        rtree = rtree,
-                        drag = Point.Zero
-                    ) + None
-                } else {
-                    val rTreeRect = msg.dragStatus.toRTreeRectangle()
-                    val result = model.rtree.search(rTreeRect).toList()
-                    val selectedIdSet = result.map { it.value }.toSet()
-                    model.copy(
-                        tool = Tool.Select(),
-                        selectShapeIdSet = selectedIdSet,
-                        drag = Point.Zero
-                    ) + None
+                is Tool.Select -> when (model.tool.state) {
+                    is Moving -> {
+                        val (shapes, rtree) = moveShapeAndRTree(model, msg.dragStatus.dragValue)
+                        model.copy(
+                            tool = Tool.Select(),
+                            shapes = shapes,
+                            rtree = rtree,
+                            dragType = DragType.Zero,
+                        ) + None
+                    }
+                    is Resize -> {
+                        val (shapes, rtree) = if (model.dragType is DragType.DragResize) {
+                            resizeShapeAndRTree(model, model.dragType)
+                        } else {
+                            model.shapes to model.rtree
+                        }
+                        model.copy(
+                            tool = Tool.Select(),
+                            shapes = shapes,
+                            rtree = rtree,
+                            dragType = DragType.Zero,
+                        ) + None
+                    }
+                    else -> {
+                        val rTreeRect = msg.dragStatus.toRTreeRectangle()
+                        val result = model.rtree.search(rTreeRect).toList()
+                        val selectedIdSet = result.map { it.value }.toSet()
+                        model.copy(
+                            tool = Tool.Select(),
+                            selectShapeIdSet = selectedIdSet,
+                            dragType = DragType.Zero,
+                        ) + None
+                    }
                 }
                 else -> model + None
             }
@@ -132,7 +178,7 @@ data class DragStatus(
                     shape.toRTreeRectangle()
                 )
             )
-            this.copy(shapes = shapes, rtree = rtree, drag = Point.Zero)
+            this.copy(shapes = shapes, rtree = rtree, dragType = DragType.Zero)
         }
 
         private fun moveShapeAndRTree(model: AppModel, dragValue: Point): Pair<List<ShapeWithID>, RTree<Long, Rectangle>> {
@@ -156,8 +202,29 @@ data class DragStatus(
             return shapes to rtree
         }
 
+        private fun resizeShapeAndRTree(model: AppModel, dragType: DragType.DragResize): Pair<List<ShapeWithID>, RTree<Long, Rectangle>> {
+            val rtreeTranslate = mutableListOf<Translate>()
+            val shapes = model.shapes.map { (id, shape) ->
+                if (model.selectShapeIdSet.contains(id)) {
+                    val newShape = shape.resize(dragType.point, dragType.handlePosition)
+                    rtreeTranslate.add(
+                        Translate(
+                            id,
+                            shape.toRTreeRectangle(),
+                            newShape.toRTreeRectangle()
+                        )
+                    )
+                    ShapeWithID(id, newShape)
+                } else {
+                    ShapeWithID(id, shape)
+                }
+            }
+            val rtree = model.rtree.move(rtreeTranslate)
+            return shapes to rtree
+        }
+
         private fun RTree<Long, Rectangle>.move(
-            translateList: MutableList<Translate>
+            translateList: List<Translate>
         ): RTree<Long, Rectangle> = translateList.fold(this) { rtree, translate ->
             rtree.delete(
                 RTreeEntry(

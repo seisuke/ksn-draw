@@ -23,3 +23,8 @@ data class AsciiRect(
 data class AsciiLine(
     val line: Line,
 ) : UiType
+
+data class ResizeShape(
+    val skiaRect: SkiaRect,
+    val handleList: List<Pair<SkiaRect, Boolean>>
+) : UiType

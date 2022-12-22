@@ -36,9 +36,10 @@ abstract class Element<Model, Message> private constructor() {
 
     @Composable
     fun <T> flowMapAsState(
-        transformFlow: (StateFlow<Model>) -> Pair<T , Flow<T>>
+        initValue: T,
+        transformFlow: (StateFlow<Model>) -> Flow<T>
     ): State<T> {
-        val (initValue, flow) = transformFlow(stateFlow)
+        val flow = transformFlow(stateFlow)
         return flow.collectAsState(initValue)
     }
 

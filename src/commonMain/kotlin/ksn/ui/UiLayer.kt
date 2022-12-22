@@ -1,6 +1,7 @@
 package ksn.ui
 
-import androidx.compose.foundation.gestures.detectDragGestures
+import androidx.compose.foundation.ExperimentalFoundationApi
+import androidx.compose.foundation.gestures.onDrag
 import androidx.compose.material.MaterialTheme
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
@@ -9,7 +10,6 @@ import androidx.compose.ui.geometry.Offset
 import androidx.compose.ui.graphics.Canvas
 import androidx.compose.ui.graphics.nativeCanvas
 import androidx.compose.ui.graphics.toArgb
-import androidx.compose.ui.input.pointer.PointerInputScope
 import androidx.compose.ui.input.pointer.pointerInput
 import androidx.compose.ui.unit.Dp
 import elm.Element
@@ -20,7 +20,10 @@ import ksn.ascii.Ascii
 import ksn.ascii.AsciiChar
 import ksn.ascii.AsciiRenderer
 import ksn.ascii.Matrix
+import ksn.model.DragType
+import ksn.model.HandlePosition
 import ksn.model.Point
+import ksn.model.SelectState
 import ksn.model.Tool
 import ksn.model.shape.Shape
 import ksn.toDragStatus
@@ -42,18 +45,23 @@ fun UiLayer(width: Dp, scale: Float) {
     val element = ModelElement.current
 
     val skiaDragStatusFlow = MutableStateFlow(SkiaDragStatus.Zero)
+    val skiaMouseCursorFlow = MutableStateFlow(Offset.Zero)
     val primaryColor = MaterialTheme.colors.primary.toArgb()
     val typeface by element.mapAsState(AppModel::typeface)
-    val uiTypeList by element.flowMapAsState { modelStateFlow ->
-        val initValue: List<UiType> = listOf(
-            Selecting(SkiaRect(0f,0f,0f, 0f))
-        )
-        initValue to modelStateFlow.combineTransform(skiaDragStatusFlow) { model, dragStatus ->
+    val uiTypeList by element.flowMapAsState(
+        listOf(Selecting(SkiaRect(0f,0f,0f, 0f)) as UiType)
+    ) { modelStateFlow ->
+        combineTransform(
+            modelStateFlow,
+            skiaDragStatusFlow,
+            skiaMouseCursorFlow
+        ) { model: AppModel, dragStatus: SkiaDragStatus, mouseCursor: Offset ->
             val uiTypeList = createUiType(
                 model.tool,
                 model.selectedShapes(),
-                model.drag,
+                model.dragType,
                 dragStatus,
+                mouseCursor,
             )
             emit(uiTypeList)
         }
@@ -62,13 +70,21 @@ fun UiLayer(width: Dp, scale: Float) {
     Layer(
         width * scale,
         width * 2 * scale,
-        Modifier.pointerInput(Unit) {
-            createDetectDragGesture(
+        Modifier
+            .handleDrag(
                 skiaDragStatusFlow,
                 element,
                 scale
             )
-        }
+            .pointerInput(Unit) {
+                awaitPointerEventScope {
+                    while (true) {
+                        val events = awaitPointerEvent()
+                        val event = events.changes.first()
+                        skiaMouseCursorFlow.value = event.position
+                    }
+                }
+            }
     ) { paint ->
         val loadedTypeface = typeface ?: return@Layer
         uiTypeList.forEach { uiType ->
@@ -80,24 +96,36 @@ fun UiLayer(width: Dp, scale: Float) {
 private fun createUiType(
     tool: Tool,
     shapes: List<ShapeWithID>,
-    drag: Point,
+    dragType: DragType,
     dragStatus: SkiaDragStatus,
+    mouseCursor: Offset, //TODO improve performance
 ): List<UiType> = when (tool) {
     is Tool.Select -> {
-        val selectedShape = selectedShape(shapes, drag)
-        if (dragStatus == SkiaDragStatus.Zero || tool.moving) {
-            listOf(selectedShape)
+        val selectedShape = selectedShape(shapes, dragType)
+        val selecting = if (dragStatus != SkiaDragStatus.Zero && tool.state == SelectState.None) {
+            Selecting(dragStatus.toSkiaRect())
+        } else  null
+        val resizeShape = if (tool.state is SelectState.Resize) {
+            val skiaRect = selectedShape.skiaRectList.first()
+            val handleList = createHandleList(skiaRect, tool.state.handlePosition)
+            ResizeShape(skiaRect, handleList)
+        } else if (selectedShape.skiaRectList.size == 1) {
+            val skiaRect = selectedShape.skiaRectList.first()
+            val handleList = createHandleList(skiaRect, mouseCursor)
+            ResizeShape(skiaRect, handleList)
         } else {
-            listOf(
-                selectedShape,
-                Selecting(dragStatus.toSkiaRect())
-            )
+            null
         }
+        listOfNotNull(
+            selectedShape,
+            selecting,
+            resizeShape,
+        )
     }
     is Tool.Rect,
     is Tool.Text -> {
         if (dragStatus == SkiaDragStatus.Zero) {
-            val selectedShape = selectedShape(shapes, drag)
+            val selectedShape = selectedShape(shapes, dragType)
             listOf(selectedShape)
         } else {
             val rect = dragStatus.toDragStatus().toKsnRect()
@@ -108,7 +136,7 @@ private fun createUiType(
     }
     is Tool.Line -> {
         if (dragStatus == SkiaDragStatus.Zero) {
-            val selectedShape = selectedShape(shapes, drag)
+            val selectedShape = selectedShape(shapes, dragType)
             listOf(selectedShape)
         } else {
             val line = dragStatus.toDragStatus().toKsnLine()
@@ -121,14 +149,25 @@ private fun createUiType(
     else -> emptyList()
 }
 
+private fun createHandleList(shape: SkiaRect, mouseCursor: Offset): List<Pair<SkiaRect, Boolean>> {
+    return shape.createHandle(10f).map { (rect, _) ->
+        rect to rect.inside(mouseCursor)
+    }
+}
+
+private fun createHandleList(shape: SkiaRect, selectHandlePosition: HandlePosition): List<Pair<SkiaRect, Boolean>> {
+    return shape.createHandle(10f).map { (rect, handlePosition) ->
+        rect to (selectHandlePosition == handlePosition)
+    }
+}
+
 private fun selectedShape(
     shapes: List<ShapeWithID>,
-    drag: Point
+    dragType: DragType
 ): SelectedShape {
-    val selectedShape = SelectedShape(
-        shapes.map { it.shape.translate(drag).toSkiaRect() }
+    return SelectedShape(
+        shapes.map { it.shape.drag(dragType).toSkiaRect() }
     )
-    return selectedShape
 }
 
 private fun Canvas.drawByUiType(
@@ -145,6 +184,7 @@ private fun Canvas.drawByUiType(
             uiType.skiaRectList.forEach { rect ->
                 nativeCanvas.drawRect(rect, paint)
             }
+            paint.reset()
         }
 
         is Selecting -> uiType.draw {
@@ -153,6 +193,20 @@ private fun Canvas.drawByUiType(
             paint.strokeWidth = 2f
             paint.pathEffect = PathEffect.makeDash(floatArrayOf(5f, 5f), 0f)
             nativeCanvas.drawRect(uiType.skiaRect, paint)
+            paint.reset()
+        }
+
+        is ResizeShape -> uiType.draw {
+            paint.color = primaryColor
+            uiType.handleList.forEach { (handle, selected) ->
+                if (selected) {
+                    paint.mode = PaintMode.STROKE_AND_FILL
+                } else {
+                    paint.mode = PaintMode.STROKE
+                }
+                nativeCanvas.drawRect(handle, paint)
+            }
+            paint.reset()
         }
 
         is AsciiRect -> uiType.draw {
@@ -169,6 +223,7 @@ private fun Canvas.drawByUiType(
                 offset.x,
                 offset.y
             )
+            paint.reset()
         }
 
         is AsciiLine -> uiType.draw {
@@ -185,6 +240,7 @@ private fun Canvas.drawByUiType(
                 offset.x,
                 offset.y
             )
+            paint.reset()
         }
     }
 }
@@ -211,21 +267,21 @@ private fun shapeToAscii(shape: Shape): Ascii {
     return ascii
 }
 
-private suspend fun PointerInputScope.createDetectDragGesture(
+@OptIn(ExperimentalFoundationApi::class)
+private fun Modifier.handleDrag(
     skiaDragStatusFlow: MutableStateFlow<SkiaDragStatus>,
     element: Element<AppModel, Msg>,
     scale: Float
-) {
-    detectDragGestures(
+): Modifier {
+    return this.onDrag(
         onDragStart = { offset ->
             val skiaDragStatus = SkiaDragStatus(offset / scale, offset / scale)
             element.accept(
-                DragStatus.DragStart(skiaDragStatus.toDragStatus())
+                DragStatus.DragStart(skiaDragStatus)
             )
             skiaDragStatusFlow.value = skiaDragStatus
         },
-        onDrag = { change, dragAmount ->
-            change.consume()
+        onDrag = { dragAmount ->
             val oldDragStatus = skiaDragStatusFlow.value
             val newDragStatus = oldDragStatus.copy(
                 end = oldDragStatus.end + dragAmount / scale
