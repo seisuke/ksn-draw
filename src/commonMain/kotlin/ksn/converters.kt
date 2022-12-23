@@ -40,7 +40,12 @@ fun SkiaDragStatus.toSkiaRect(): SkiaRect {
 
 fun Point.toRTreePoint(): RTreePoint = RTreePoint(this.x, this.y)
 
-//KsnConverters
+fun Shape.toRTreeRectangle() = RTreeRectangle(
+    left,
+    top,
+    right,
+    bottom
+)
 
 fun DragStatus.toRTreeRectangle(): RTreeRectangle {
     val (left, top, right ,bottom) = toDataRect()
@@ -51,6 +56,8 @@ fun DragStatus.toRTreeRectangle(): RTreeRectangle {
         bottom
     )
 }
+
+//KsnConverters
 
 fun DragStatus.toKsnRect(): KsnRect {
     val (left, top, right ,bottom) = toDataRect()
@@ -68,13 +75,6 @@ fun DragStatus.toKsnLine(): Line {
         end
     )
 }
-
-fun Shape.toRTreeRectangle() = RTreeRectangle(
-    left,
-    top,
-    right,
-    bottom
-)
 
 private fun DragStatus.toDataRect(): DataRect {
     val (left, right) = orderedPair(start.x, end.x)
