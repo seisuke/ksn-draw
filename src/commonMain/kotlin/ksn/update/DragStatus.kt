@@ -16,6 +16,7 @@ import ksn.model.shape.TextBox
 import ksn.toDragStatus
 import ksn.toKsnLine
 import ksn.toKsnRect
+import ksn.toRTreePoint
 import ksn.toRTreeRectangle
 import ksn.toSkiaRect
 import ksn.ui.SkiaDragStatus
@@ -23,7 +24,6 @@ import ksn.ui.createHandle
 import ksn.ui.inside
 import rtree.RTree
 import rtree.Rectangle
-import rtree.Point as RTreePoint
 
 data class DragStatus(
     val start: Point,
@@ -49,38 +49,36 @@ data class DragStatus(
             model: AppModel,
             msg: DragStart
         ): Pure<AppModel> {
-            return when {
-                model.selectShapeIdSet.isEmpty() -> model + None
-                model.selectShapeIdSet.size == 1 -> { //TODO can't move single shape
-                    val shape = model.selectedShapes().firstOrNull() ?: return model + None
-                    val (_, handlePosition) = shape.shape
-                        .toSkiaRect()
-                        .createHandle(10f)
-                        .firstOrNull { (rect, _) ->
-                            rect.inside(msg.skiaDragStatus.start)
-                        } ?: return model + None
-                    model.copy(
+            if (model.selectShapeIdSet.isEmpty()) {
+                return model + None
+            }
+            if (model.selectShapeIdSet.size == 1) {
+                val shape = model.selectedShapes().firstOrNull() ?: return model + None
+                val handlePosition = shape.shape
+                    .toSkiaRect()
+                    .createHandle(10f)
+                    .firstOrNull { (rect, _) ->
+                        rect.inside(msg.skiaDragStatus.start)
+                    }?.second
+
+                if (handlePosition != null) {
+                    return model.copy(
                         tool = Tool.Select(Resize(handlePosition))
                     ) + None
                 }
-                else -> {
-                    val dragStatus = msg.skiaDragStatus.toDragStatus()
-                    val point = dragStatus.start
-                    val shapeIdList = model.rtree.search(
-                        RTreePoint(
-                            point.x,
-                            point.y
-                        )
-                    ).map { it.value }
+            }
 
-                    if (shapeIdList.intersect(model.selectShapeIdSet).isNotEmpty()) {
-                        model.copy(
-                            tool = Tool.Select(Moving)
-                        ) + None
-                    } else {
-                        model + None
-                    }
-                }
+            val dragStatus = msg.skiaDragStatus.toDragStatus()
+            val shapeIdList = model.rtree.search(
+                dragStatus.start.toRTreePoint()
+            ).map { it.value }
+
+            return if (shapeIdList.intersect(model.selectShapeIdSet).isNotEmpty()) {
+                model.copy(
+                    tool = Tool.Select(Moving)
+                ) + None
+            } else {
+                model + None
             }
         }
 

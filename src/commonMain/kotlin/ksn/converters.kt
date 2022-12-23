@@ -10,6 +10,7 @@ import ksn.update.DragStatus
 import ksn.model.shape.Rect as KsnRect
 import org.jetbrains.skia.Rect as SkiaRect
 import rtree.Rectangle as RTreeRectangle
+import rtree.Point as RTreePoint
 
 //FromSkiaConverters
 
@@ -34,6 +35,10 @@ fun SkiaDragStatus.toSkiaRect(): SkiaRect {
     val (top, bottom) = orderedPair(start.y, end.y)
     return SkiaRect(left, top, right, bottom)
 }
+
+// ToRTreeConverters
+
+fun Point.toRTreePoint(): RTreePoint = RTreePoint(this.x, this.y)
 
 //KsnConverters
 
