@@ -39,6 +39,23 @@ class RTreeTest {
     }
 
     @Test
+    fun searchRectangle() {
+        val tree: RTree<Int, Rectangle> = RTree.create(
+            listOf(
+                rect(1, 4, 4, 8, 8)
+            )
+        )
+        val result1 = tree.search(Point(9,8), 1.1).toList()
+        assertEquals(1, result1.size)
+        val result2 = tree.search(Point(3,4), 1.1).toList()
+        assertEquals(1, result2.size)
+        val result3 = tree.search(Point(9,6), 1.1).toList()
+        assertEquals(1, result3.size)
+        val result4 = tree.search(Point(6,9), 1.1).toList()
+        assertEquals(1, result3.size)
+    }
+
+    @Test
     fun nearestWithMaxCount() {
         val entries = (0..10).map { point(it) }.shuffled()
         val tree: RTree<Int, Point> = RTree.create(
@@ -49,7 +66,7 @@ class RTreeTest {
     }
 
     @Test
-    fun nearestWithMaxDistance() {
+    fun nearestPointWithMaxDistance() {
         val entries = (0..10).map { point(it) }.shuffled()
         val tree: RTree<Int, Point> = RTree.create(
             entries
@@ -119,6 +136,11 @@ class RTreeTest {
     private fun point(n: Int) = object : Entry<Int, Point> {
         override val value = n
         override fun geometry() = Point(n, n)
+    }
+
+    private fun rect(id: Int, x1: Int, y1: Int, x2: Int, y2: Int) = object : Entry<Int, Rectangle> {
+        override val value = id
+        override fun geometry() = Rectangle(x1, y1, x2, y2)
     }
 
     private fun rectangle(

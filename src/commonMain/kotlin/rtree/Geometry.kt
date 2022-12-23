@@ -4,7 +4,6 @@ import kotlin.math.max
 import kotlin.math.min
 import kotlin.math.sqrt
 
-
 /**
  * A geometrical region that represents an Entry spatially. It is recommended
  * that implementations of this interface implement equals() and hashCode()
@@ -61,7 +60,7 @@ data class Rectangle(
         } else {
             val xDistance = axisDistance(x1, x2, r.x1, r.x2)
             val yDistance = axisDistance(y1, y2, r.y1, r.y2)
-            sqrt((xDistance * xDistance + yDistance * yDistance).toDouble())
+            return sqrt((xDistance * xDistance + yDistance * yDistance).toDouble())
         }
     }
 
@@ -93,12 +92,6 @@ data class Rectangle(
 
     fun perimeter(): Int = 2 * (x2 - x1) + 2 * (y2 - y1)
 
-    private fun axisDistance(a1: Int, a2: Int, b1: Int, b2: Int): Int = if (a1 < b2) {
-        b1 - a2
-    } else {
-        a1 - b2
-    }
-
 }
 
 data class Point(
@@ -106,7 +99,17 @@ data class Point(
     val y: Int
 ) : Geometry, HasGeometry {
     private val rectangle = Rectangle(x, y, x, y)
-    override fun distance(r: Rectangle) = rectangle.distance(r)
+    override fun distance(r: Rectangle): Double {
+        val distanceOnlyY = ((r.x1)..(r.x2)).contains(x)
+        val distanceOnlyX = ((r.y1)..(r.y2)).contains(y)
+        return if (distanceOnlyY && !distanceOnlyX) {
+            axisDistance(y, y, r.y1, r.y2).toDouble()
+        } else if (!distanceOnlyY && distanceOnlyX) {
+            axisDistance(x, x, r.x1, r.x2).toDouble()
+        } else {
+            rectangle.distance(r)
+        }
+    }
     override fun mbr() = rectangle.mbr()
     override fun intersects(r: Rectangle) = rectangle.intersects(r)
     override fun geometry() = rectangle.geometry()
@@ -156,5 +159,11 @@ fun Collection<HasGeometry>.mbr(): Rectangle {
     }
 
     return Rectangle(minX1, minY1, maxX2, maxY2)
+}
+
+private fun axisDistance(a1: Int, a2: Int, b1: Int, b2: Int): Int = if (a1 < b2) {
+    b1 - a2
+} else {
+    a1 - b2
 }
 

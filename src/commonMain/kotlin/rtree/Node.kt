@@ -19,6 +19,8 @@ data class NodeAndEntries<T, GEOMETRY : Geometry>(
 interface Entry<T, GEOMETRY : Geometry> : HasGeometry {
     val value: T
     override fun geometry(): GEOMETRY
+    operator fun component1(): T = value
+    operator fun component2(): GEOMETRY = geometry()
 }
 
 interface Leaf<T, GEOMETRY : Geometry> : Node<T, GEOMETRY> {

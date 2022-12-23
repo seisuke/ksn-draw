@@ -208,7 +208,9 @@ class RTree<T, S : Geometry> private constructor(
      * @return the sequence of matching entries
      */
     fun search(p: Point, maxDistance: Double): Iterable<Entry<T, S>> {
-        return search(p.mbr(), maxDistance)
+        return search { geometry ->
+            p.distance(geometry.mbr()) < maxDistance
+        }
     }
 
     /**
