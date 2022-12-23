@@ -8,6 +8,7 @@ import androidx.compose.runtime.getValue
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.geometry.Offset
 import androidx.compose.ui.graphics.Canvas
+import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.nativeCanvas
 import androidx.compose.ui.graphics.toArgb
 import androidx.compose.ui.input.pointer.pointerInput
@@ -208,60 +209,55 @@ private fun Canvas.drawByUiType(
             }
             paint.reset()
         }
-
         is AsciiRect -> uiType.draw {
-            paint.color = primaryColor
             val rect = uiType.rect
-            val ascii = shapeToAscii(rect)
-            val offset = offsetFromShape(rect)
-            AsciiRenderer.drawAscii(
-                nativeCanvas,
-                paint,
-                typeface,
-                ascii,
-                scale,
-                offset.x,
-                offset.y
-            )
-            paint.reset()
+            drawAscii(rect, paint, primaryColor, typeface, scale)
         }
 
         is AsciiLine -> uiType.draw {
-            paint.color = primaryColor
             val line = uiType.line
-            val ascii = shapeToAscii(line)
-            val offset = offsetFromShape(line)
-            AsciiRenderer.drawAscii(
-                nativeCanvas,
-                paint,
-                typeface,
-                ascii,
-                scale,
-                offset.x,
-                offset.y
-            )
-            paint.reset()
+            drawAscii(line, paint, primaryColor, typeface, scale)
         }
     }
 }
 
-private fun offsetFromShape(shape: Shape): Offset = with(shape) {
-    Offset(
-        left.toSkiaFloat(),
-        top.toSkiaFloat() * 2
+private fun Canvas.drawAscii(
+    shape: Shape,
+    paint: Paint,
+    color: Int,
+    typeface: Typeface,
+    scale: Float
+) {
+    val ascii = shape.toAscii()
+    val offset = shape.toOffset()
+    paint.color = color
+    AsciiRenderer.drawAscii(
+        nativeCanvas,
+        paint,
+        typeface,
+        ascii,
+        scale,
+        offset.x,
+        offset.y
     )
+    paint.reset()
 }
 
-private fun shapeToAscii(shape: Shape): Ascii {
+private fun Shape.toOffset(): Offset = Offset(
+    left.toSkiaFloat(),
+    top.toSkiaFloat() * 2
+)
+
+private fun Shape.toAscii(): Ascii {
     val ascii = Ascii(
         Matrix.init(
-            shape.width,
-            shape.height,
+            width,
+            height,
             AsciiChar.Space
         )
     )
-    val noOffsetRect = shape.translate(
-        Point(-shape.left, -shape.top)
+    val noOffsetRect = translate(
+        Point(-left, -top)
     )
     ascii.mergeToMatrix(listOf(noOffsetRect))
     return ascii
