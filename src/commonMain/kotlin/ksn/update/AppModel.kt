@@ -3,6 +3,7 @@ package ksn.update
 import androidx.compose.material.SnackbarHostState
 import androidx.compose.ui.platform.ClipboardManager
 import androidx.compose.ui.text.AnnotatedString
+import elm.ModelOperator
 import kotlinx.atomicfu.AtomicLong
 import ksn.ascii.Ascii
 import ksn.ascii.AsciiChar
@@ -28,7 +29,7 @@ data class AppModel(
     val typeface: Typeface? = null,
     val snackbarHostState: SnackbarHostState = SnackbarHostState(),
     val inputTextFieldHostState: SnackbarHostState = SnackbarHostState(),
-) {
+): ModelOperator {
     data class CurrentTool(val tool: Tool): Msg
     object StartLoadFont: Msg
     data class LoadFontResult(val typeface: Typeface): Msg

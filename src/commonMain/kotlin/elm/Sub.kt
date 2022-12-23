@@ -21,6 +21,8 @@ data class Pure<Model>(override val model: Model) : Sub<Model, Nothing>()
  */
 data class Effect<Model, Command>(override val model: Model, val cmd: Command) : Sub<Model, Command>()
 
+interface ModelOperator
+
 /**
  * Syntactic sugar for creating a [Pure], and we all now that too much sugar is bad for your health.
  *
@@ -28,7 +30,7 @@ data class Effect<Model, Command>(override val model: Model, val cmd: Command) :
  * app.model + none == elm.Pure(app.model)
  *
  */
-operator fun <Model> Model.plus(@Suppress("UNUSED_PARAMETER") none: None): Pure<Model> = Pure(this)
+operator fun <Model : ModelOperator> Model.plus(@Suppress("UNUSED_PARAMETER") none: None): Pure<Model> = Pure(this)
 
 /* Marks that there are no commands.*/
 object None
@@ -40,4 +42,4 @@ object None
  * app.model + app.app.ksn.update.Cmd.Increment == elm.Effect(app.model,app.app.ksn.update.Cmd.Increment)
  *
  */
-operator fun <Model, Command> Model.plus(that: Command): Sub<Model, Command> = Effect(this, that)
+operator fun <Model : ModelOperator, Command> Model.plus(that: Command): Sub<Model, Command> = Effect(this, that)
