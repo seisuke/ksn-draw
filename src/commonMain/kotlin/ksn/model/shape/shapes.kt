@@ -141,6 +141,37 @@ data class Line(
         connect = connect
     )
 
+    fun getConnectIdList(): List<Long> = connect.getIdList()
+
+    fun connectTranslate(point: Point, shapeId: Long): Line {
+        return when (val connect= connect) {
+            is Connect.Start -> {
+                if (connect.id == shapeId) {
+                    this.copy(start = this.start + point)
+                } else {
+                    this
+                }
+            }
+            is Connect.End -> {
+                if (connect.id == shapeId) {
+                    this.copy(end = this.end + point)
+                } else {
+                    this
+                }
+            }
+            is Connect.Both -> {
+                if (connect.startId == shapeId) {
+                    this.copy(start = this.start + point)
+                } else if (connect.endId == shapeId) {
+                    this.copy(end = this.end + point)
+                } else {
+                    this
+                }
+            }
+            else -> this
+        }
+    }
+
     override fun resize(point: Point, handlePosition: HandlePosition): Shape = this
 
     sealed class Connect {
@@ -155,6 +186,15 @@ data class Line(
             val startId: Long,
             val endId: Long,
         ) : Connect()
+
+        fun getIdList(): List<Long> {
+            return when (this) {
+                is Start -> listOf(this.id)
+                is End -> listOf(this.id)
+                is Both -> listOf(this.startId, this.endId)
+                None -> emptyList()
+            }
+        }
     }
 }
 

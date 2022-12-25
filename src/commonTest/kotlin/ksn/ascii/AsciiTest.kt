@@ -1,5 +1,6 @@
 package ksn.ascii
 
+import ksn.ascii.TestHelper.convertTextList
 import ksn.model.Point
 import ksn.model.shape.Line
 import ksn.model.shape.Rect
@@ -144,14 +145,5 @@ class AsciiTest {
             ),
             text,
         )
-    }
-
-    private fun convertTextList(line: Line): List<String> {
-        val text = Ascii(
-            Matrix.init(0, 0, AsciiChar.Char(" "))
-        ).run {
-            line.toAsciiMatrix().joinToString { it.value }
-        }
-        return text
     }
 }

@@ -154,9 +154,8 @@ private fun createUiType(
             listOf(selectedShape)
         } else {
             val dragStatus = skiaDragStatus.toDragStatus()
-            val nearShapeIdList = rtree.search(dragStatus.end.toRTreePoint(), LINE_ANCHOR_DISTANCE).map { (id, _) ->
-                id
-            }
+            val nearShapeIdList = rtree.search(dragStatus.end.toRTreePoint(), LINE_ANCHOR_DISTANCE)
+                .map { (id, _) -> id }
             val anchorList = shapes.filter { (id, shape) ->
                 nearShapeIdList.contains(id) && (shape is Rect || shape is TextBox)
             }.flatMap {

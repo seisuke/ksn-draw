@@ -86,3 +86,5 @@ data class ShapeWithID(
     val id: Long,
     val shape: Shape,
 )
+
+fun Shape.withId(id: Long) = ShapeWithID(id, this)
