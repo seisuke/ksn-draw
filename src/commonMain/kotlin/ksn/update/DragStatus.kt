@@ -4,6 +4,7 @@ import elm.None
 import elm.Pure
 import elm.Sub
 import elm.plus
+import ksn.Constants
 import ksn.model.DragType
 import ksn.model.Point
 import ksn.model.RTreeEntry
@@ -11,8 +12,11 @@ import ksn.model.SelectState.Moving
 import ksn.model.SelectState.Resize
 import ksn.model.Tool
 import ksn.model.minus
+import ksn.model.shape.Line
+import ksn.model.shape.Rect
 import ksn.model.shape.Shape
 import ksn.model.shape.TextBox
+import ksn.model.shape.createAnchorHandle
 import ksn.toDragStatus
 import ksn.toKsnLine
 import ksn.toKsnRect
@@ -20,7 +24,7 @@ import ksn.toRTreePoint
 import ksn.toRTreeRectangle
 import ksn.toSkiaRect
 import ksn.ui.SkiaDragStatus
-import ksn.ui.createHandle
+import ksn.ui.createResizeHandle
 import ksn.ui.inside
 import rtree.RTree
 import rtree.Rectangle
@@ -56,7 +60,7 @@ data class DragStatus(
                 val shape = model.selectedShapes().firstOrNull() ?: return model + None
                 val handlePosition = shape.shape
                     .toSkiaRect()
-                    .createHandle(10f)
+                    .createResizeHandle(10f)
                     .firstOrNull { (rect, _) ->
                         rect.inside(msg.skiaDragStatus.start)
                     }?.second
@@ -114,9 +118,22 @@ data class DragStatus(
                     model.returnUpdateModel(id, rect) + None
                 }
                 is Tool.Line -> {
-                    val id = model.maxId.getAndIncrement()
-                    val line = msg.dragStatus.toKsnLine()
-                    model.returnUpdateModel(id, line) + None
+                    val connectShape = findConnectShape(model, msg)
+                    val connect = if (connectShape == null) {
+                        Line.Connect.None
+                    } else {
+                        Line.Connect.End(connectShape.id)
+                    }
+
+                    val lineId = model.maxId.getAndIncrement()
+                    val line = msg.dragStatus.toKsnLine(connect)
+                    val updatedModel = model.returnUpdateModel(lineId, line)
+                    if (connectShape == null) {
+                        updatedModel
+                    } else {
+                        val updatedShapes = updateConnectShapeInList(updatedModel.shapes, connectShape, lineId)
+                        updatedModel.copy( shapes = updatedShapes)
+                    } + None
                 }
                 is Tool.Text -> {
                     val id = model.maxId.getAndIncrement()
@@ -162,6 +179,44 @@ data class DragStatus(
                 }
                 else -> model + None
             }
+        }
+
+        private fun updateConnectShapeInList(
+            shapeList: List<ShapeWithID>,
+            connectShape: ShapeWithID,
+            lineId: Long
+        ) = shapeList.map { shapeWithId ->
+            if (shapeWithId.id == connectShape.id) {
+                val shape = shapeWithId.shape
+                if (shape is Rect) {
+                    ShapeWithID(
+                        shapeWithId.id,
+                        shape.copy(
+                            connectLine = shape.connectLine + listOf(lineId)
+                        )
+                    )
+                } else {
+                    shapeWithId
+                }
+
+            } else {
+                shapeWithId
+            }
+        }
+
+        private fun findConnectShape(model: AppModel, msg: DragEnd): ShapeWithID? {
+            val connectShape = model.rtree.search(
+                msg.dragStatus.end.toRTreePoint(),
+                Constants.LINE_ANCHOR_DISTANCE
+            ).asSequence().mapNotNull { (id, _) ->
+                // TODO need rectangle.createAnchorHandle
+                model.shapes.firstOrNull {
+                    it.id == id
+                }
+            }.firstOrNull { shape ->
+                shape.shape.createAnchorHandle().contains(msg.dragStatus.end)
+            }
+            return connectShape
         }
 
         private fun AppModel.returnUpdateModel(id: Long, shape: Shape) = if (shape.isEmpty) {

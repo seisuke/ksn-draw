@@ -9,8 +9,8 @@ import ksn.ui.SkiaDragStatus
 import ksn.update.DragStatus
 import ksn.model.shape.Rect as KsnRect
 import org.jetbrains.skia.Rect as SkiaRect
-import rtree.Rectangle as RTreeRectangle
 import rtree.Point as RTreePoint
+import rtree.Rectangle as RTreeRectangle
 
 //FromSkiaConverters
 
@@ -26,6 +26,11 @@ fun Shape.toSkiaRect() = SkiaRect(
     this.top.toSkiaFloat() * 2,
     (this.right + 1).toSkiaFloat(),
     (this.bottom + 1).toSkiaFloat() * 2
+)
+
+fun Point.toSkiaOffset() = Offset(
+    (this.x * GRID_WIDTH).toFloat(),
+    (this.y * GRID_WIDTH * 2).toFloat(),
 )
 
 //SkiaInternalConverters
@@ -69,10 +74,11 @@ fun DragStatus.toKsnRect(): KsnRect {
     )
 }
 
-fun DragStatus.toKsnLine(): Line {
+fun DragStatus.toKsnLine(connect: Line.Connect = Line.Connect.None): Line {
     return Line(
         start,
-        end
+        end,
+        connect
     )
 }
 

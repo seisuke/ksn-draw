@@ -28,3 +28,7 @@ data class ResizeShape(
     val skiaRect: SkiaRect,
     val handleList: List<Pair<SkiaRect, Boolean>>
 ) : UiType
+
+data class LineAnchor(
+    val anchorList: List<Anchor>
+) : UiType

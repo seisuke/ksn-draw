@@ -4,7 +4,7 @@ import androidx.compose.ui.geometry.Offset
 import ksn.model.HandlePosition
 import org.jetbrains.skia.Rect as SkiaRect
 
-fun SkiaRect.createHandle(size: Float): List<Pair<SkiaRect, HandlePosition>> {
+fun SkiaRect.createResizeHandle(size: Float): List<Pair<SkiaRect, HandlePosition>> {
     val (vCenterTop, vCenterBottom) = halfPointPair(top, bottom, size)
     val (hCenterLeft, hCenterRight) = halfPointPair(left, right, size)
     return listOf(

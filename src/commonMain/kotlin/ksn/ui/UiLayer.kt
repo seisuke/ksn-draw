@@ -8,7 +8,6 @@ import androidx.compose.runtime.getValue
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.geometry.Offset
 import androidx.compose.ui.graphics.Canvas
-import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.nativeCanvas
 import androidx.compose.ui.graphics.toArgb
 import androidx.compose.ui.input.pointer.pointerInput
@@ -16,6 +15,8 @@ import androidx.compose.ui.unit.Dp
 import elm.Element
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.combineTransform
+import ksn.Constants.Companion.GRID_WIDTH
+import ksn.Constants.Companion.LINE_ANCHOR_DISTANCE
 import ksn.ModelElement
 import ksn.ascii.Ascii
 import ksn.ascii.AsciiChar
@@ -23,22 +24,30 @@ import ksn.ascii.AsciiRenderer
 import ksn.ascii.Matrix
 import ksn.model.DragType
 import ksn.model.HandlePosition
-import ksn.model.Point
 import ksn.model.SelectState
 import ksn.model.Tool
+import ksn.model.shape.Rect
 import ksn.model.shape.Shape
+import ksn.model.shape.TextBox
+import ksn.model.shape.createAnchorHandle
 import ksn.toDragStatus
 import ksn.toKsnLine
 import ksn.toKsnRect
+import ksn.toRTreePoint
+import ksn.toSkiaOffset
 import ksn.toSkiaRect
 import ksn.update.AppModel
 import ksn.update.DragStatus
 import ksn.update.Msg
 import ksn.update.ShapeWithID
+import org.jetbrains.skia.Color
 import org.jetbrains.skia.Paint
 import org.jetbrains.skia.PaintMode
 import org.jetbrains.skia.PathEffect
 import org.jetbrains.skia.Typeface
+import rtree.RTree
+import rtree.Rectangle
+import ksn.model.Point as KsnPoint
 import org.jetbrains.skia.Rect as SkiaRect
 
 @Composable
@@ -59,8 +68,10 @@ fun UiLayer(width: Dp, scale: Float) {
         ) { model: AppModel, dragStatus: SkiaDragStatus, mouseCursor: Offset ->
             val uiTypeList = createUiType(
                 model.tool,
+                model.shapes,
                 model.selectedShapes(),
                 model.dragType,
+                model.rtree,
                 dragStatus,
                 mouseCursor,
             )
@@ -97,22 +108,24 @@ fun UiLayer(width: Dp, scale: Float) {
 private fun createUiType(
     tool: Tool,
     shapes: List<ShapeWithID>,
+    selectedShapes: List<ShapeWithID>,
     dragType: DragType,
-    dragStatus: SkiaDragStatus,
+    rtree: RTree<Long, Rectangle>,
+    skiaDragStatus: SkiaDragStatus,
     mouseCursor: Offset, //TODO improve performance
 ): List<UiType> = when (tool) {
     is Tool.Select -> {
-        val selectedShape = selectedShape(shapes, dragType)
-        val selecting = if (dragStatus != SkiaDragStatus.Zero && tool.state == SelectState.None) {
-            Selecting(dragStatus.toSkiaRect())
+        val selectedShape = selectedShape(selectedShapes, dragType)
+        val selecting = if (skiaDragStatus != SkiaDragStatus.Zero && tool.state == SelectState.None) {
+            Selecting(skiaDragStatus.toSkiaRect())
         } else  null
         val resizeShape = if (tool.state is SelectState.Resize) {
             val skiaRect = selectedShape.skiaRectList.first()
-            val handleList = createHandleList(skiaRect, tool.state.handlePosition)
+            val handleList = createResizeHandleList(skiaRect, tool.state.handlePosition)
             ResizeShape(skiaRect, handleList)
         } else if (selectedShape.skiaRectList.size == 1) {
             val skiaRect = selectedShape.skiaRectList.first()
-            val handleList = createHandleList(skiaRect, mouseCursor)
+            val handleList = createResizeHandleList(skiaRect, mouseCursor)
             ResizeShape(skiaRect, handleList)
         } else {
             null
@@ -125,24 +138,35 @@ private fun createUiType(
     }
     is Tool.Rect,
     is Tool.Text -> {
-        if (dragStatus == SkiaDragStatus.Zero) {
-            val selectedShape = selectedShape(shapes, dragType)
+        if (skiaDragStatus == SkiaDragStatus.Zero) {
+            val selectedShape = selectedShape(selectedShapes, dragType)
             listOf(selectedShape)
         } else {
-            val rect = dragStatus.toDragStatus().toKsnRect()
+            val rect = skiaDragStatus.toDragStatus().toKsnRect()
             listOf(
                 AsciiRect(rect)
             )
         }
     }
     is Tool.Line -> {
-        if (dragStatus == SkiaDragStatus.Zero) {
-            val selectedShape = selectedShape(shapes, dragType)
+        if (skiaDragStatus == SkiaDragStatus.Zero) {
+            val selectedShape = selectedShape(selectedShapes, dragType)
             listOf(selectedShape)
         } else {
-            val line = dragStatus.toDragStatus().toKsnLine()
+            val dragStatus = skiaDragStatus.toDragStatus()
+            val nearShapeIdList = rtree.search(dragStatus.end.toRTreePoint(), LINE_ANCHOR_DISTANCE).map { (id, _) ->
+                id
+            }
+            val anchorList = shapes.filter { (id, shape) ->
+                nearShapeIdList.contains(id) && (shape is Rect || shape is TextBox)
+            }.flatMap {
+                createAnchorHandleList(it, dragStatus)
+            }
+
+            val line = dragStatus.toKsnLine()
             listOf(
-                AsciiLine(line)
+                AsciiLine(line),
+                LineAnchor(anchorList),
             )
         }
     }
@@ -150,14 +174,31 @@ private fun createUiType(
     else -> emptyList()
 }
 
-private fun createHandleList(shape: SkiaRect, mouseCursor: Offset): List<Pair<SkiaRect, Boolean>> {
-    return shape.createHandle(10f).map { (rect, _) ->
+data class Anchor(
+    val shapeId: Long,
+    val handle: KsnPoint,
+    val isSelect: Boolean,
+)
+
+private fun createAnchorHandleList(shapeWithID: ShapeWithID, dragStatus: DragStatus): List<Anchor> {
+    val handleList = shapeWithID.shape.createAnchorHandle()
+    return handleList.map { handle ->
+        Anchor(
+            shapeWithID.id,
+            handle,
+            handle == dragStatus.end
+        )
+    }
+}
+
+private fun createResizeHandleList(rect: SkiaRect, mouseCursor: Offset): List<Pair<SkiaRect, Boolean>> {
+    return rect.createResizeHandle(10f).map { (rect, _) ->
         rect to rect.inside(mouseCursor)
     }
 }
 
-private fun createHandleList(shape: SkiaRect, selectHandlePosition: HandlePosition): List<Pair<SkiaRect, Boolean>> {
-    return shape.createHandle(10f).map { (rect, handlePosition) ->
+private fun createResizeHandleList(rect: SkiaRect, selectHandlePosition: HandlePosition): List<Pair<SkiaRect, Boolean>> {
+    return rect.createResizeHandle(10f).map { (rect, handlePosition) ->
         rect to (selectHandlePosition == handlePosition)
     }
 }
@@ -209,6 +250,7 @@ private fun Canvas.drawByUiType(
             }
             paint.reset()
         }
+
         is AsciiRect -> uiType.draw {
             val rect = uiType.rect
             drawAscii(rect, paint, primaryColor, typeface, scale)
@@ -217,6 +259,19 @@ private fun Canvas.drawByUiType(
         is AsciiLine -> uiType.draw {
             val line = uiType.line
             drawAscii(line, paint, primaryColor, typeface, scale)
+        }
+
+        is LineAnchor -> uiType.draw {
+            uiType.anchorList.forEach { anchor ->
+                val offset = anchor.handle.toSkiaOffset()
+                if (anchor.isSelect) {
+                    paint.color = Color.RED // TODO Fix Color
+                } else {
+                    paint.color = Color.GREEN // TODO Fix Color
+                }
+                nativeCanvas.drawCircle(offset.x + GRID_WIDTH / 2, offset.y + GRID_WIDTH, GRID_WIDTH / 2f, paint)
+            }
+            paint.reset()
         }
     }
 }
@@ -257,7 +312,7 @@ private fun Shape.toAscii(): Ascii {
         )
     )
     val noOffsetRect = translate(
-        Point(-left, -top)
+        KsnPoint(-left, -top)
     )
     ascii.mergeToMatrix(listOf(noOffsetRect))
     return ascii

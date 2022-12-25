@@ -20,7 +20,7 @@ data class AppModel(
     val title: String,
     val tool: Tool,
     val maxId: AtomicLong,
-    val shapes: List<ShapeWithID> = emptyList(),
+    val shapes: List<ShapeWithID> = emptyList(), // TODO should be TreeMap
     val selectShapeIdSet: Set<Long> = emptySet(),
     val rtree: RTree<Long, Rectangle> = RTree.create(
         emptyList()

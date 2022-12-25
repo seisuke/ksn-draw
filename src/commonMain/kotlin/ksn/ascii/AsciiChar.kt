@@ -1,7 +1,5 @@
 package ksn.ascii
 
-import androidx.compose.animation.slideOutHorizontally
-import io.github.seisuke.kemoji.Emoji as Kemoji
 import ksn.ascii.BoundingType.DOWN_AND_HORIZONTAL
 import ksn.ascii.BoundingType.DOWN_AND_LEFT
 import ksn.ascii.BoundingType.DOWN_AND_RIGHT
@@ -13,6 +11,7 @@ import ksn.ascii.BoundingType.VERTICAL
 import ksn.ascii.BoundingType.VERTICAL_AND_HORIZONTAL
 import ksn.ascii.BoundingType.VERTICAL_AND_LEFT
 import ksn.ascii.BoundingType.VERTICAL_AND_RIGHT
+import io.github.seisuke.kemoji.Emoji as Kemoji
 
 sealed class AsciiChar {
     abstract val value: String

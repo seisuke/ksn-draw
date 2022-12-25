@@ -21,10 +21,15 @@ sealed interface Shape {
     val top: Int
     val right: Int
     val bottom: Int
+    val connectLine: List<Long>
     val width: Int
         get() = right - left + 1
     val height: Int
         get() = bottom - top + 1
+    val verticalCenter: Int
+        get() = (top + bottom) / 2
+    val horizontalCenter: Int
+        get() = (left + right) / 2
     val isEmpty: Boolean
 
     fun Int.toSkiaFloat(): Float = (this * GRID_WIDTH).toFloat()
@@ -48,7 +53,8 @@ data class Rect(
     override val left: Int,
     override val top: Int,
     override val right: Int,
-    override val bottom: Int
+    override val bottom: Int,
+    override val connectLine: List<Long> = emptyList()
 ): Shape {
     override val isEmpty: Boolean
         get() = width <= 1 || height <= 1
@@ -57,7 +63,7 @@ data class Rect(
         left + point.x,
         top + point.y,
         right + point.x,
-        bottom + point.y
+        bottom + point.y,
     )
 
     // TODO validate point
@@ -115,12 +121,16 @@ data class Rect(
 
 data class Line(
     val start: Point,
-    val end: Point
+    val end: Point,
+    val connect: Connect = Connect.None
 ): Shape {
+    // TODO add another pattern when line connect with shape
     override val left: Int = min(start.x, end.x)
     override val top: Int = min(start.y, end.y)
     override val right: Int = max(start.x, end.x)
     override val bottom: Int = max(start.y, end.y)
+    override val connectLine: List<Long>
+        get() = emptyList()
 
     override val isEmpty: Boolean
         get() = width <= 1 && height <= 1
@@ -128,9 +138,24 @@ data class Line(
     override fun translate(point: Point) = Line(
         start + point,
         end + point,
+        connect = connect
     )
 
     override fun resize(point: Point, handlePosition: HandlePosition): Shape = this
+
+    sealed class Connect {
+        object None : Connect()
+        data class Start(
+            val id: Long,
+        ) : Connect()
+        data class End(
+            val id: Long,
+        ) : Connect()
+        data class Both(
+            val startId: Long,
+            val endId: Long,
+        ) : Connect()
+    }
 }
 
 data class TextBox(
@@ -149,3 +174,9 @@ data class TextBox(
     )
 }
 
+fun Shape.createAnchorHandle(): List<Point> = listOf(
+    Point(left - 1, verticalCenter),
+    Point(right + 1, verticalCenter),
+    Point(horizontalCenter, top - 1),
+    Point(horizontalCenter, bottom + 1),
+)

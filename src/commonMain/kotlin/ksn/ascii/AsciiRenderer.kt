@@ -53,6 +53,7 @@ object AsciiRenderer {
                     paint
                 )
             }
+            restore()
         }
     }
 }

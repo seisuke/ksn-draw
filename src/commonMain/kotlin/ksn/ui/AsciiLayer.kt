@@ -20,8 +20,11 @@ fun AsciiLayer(
     val shapes by element.mapAsState { model ->
         model.shapes.map { (id, shape) ->
             if (model.selectShapeIdSet.contains(id)) { //TODO move to Shape#drag
+                // temporary transform for UI
                 when (val dragType = model.dragType) {
-                    is DragType.DragMoving -> shape.translate(dragType.point)
+                    is DragType.DragMoving -> {
+                        shape.translate(dragType.point)
+                    }
                     is DragType.DragResize -> shape.resize(
                         dragType.point,
                         dragType.handlePosition
