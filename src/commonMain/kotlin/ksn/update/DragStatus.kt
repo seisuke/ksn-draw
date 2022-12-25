@@ -140,6 +140,7 @@ data class DragStatus(
                 }
                 is Tool.Select -> when (model.tool.state) {
                     is Moving -> {
+                        // TODO remove connect when move 'list'
                         val (shapes, rtree) = moveShapeAndRTree(model, msg.dragStatus.dragValue)
                         model.copy(
                             tool = Tool.Select(),

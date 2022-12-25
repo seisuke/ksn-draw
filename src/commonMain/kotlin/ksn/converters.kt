@@ -19,6 +19,11 @@ fun SkiaDragStatus.toDragStatus() = DragStatus(
     end.toKsnPoint(),
 )
 
+fun Offset.toKsnPoint() = Point(
+    x.toKsnUnit(),
+    (y / 2).toKsnUnit()
+)
+
 // ToSkiaConverters
 
 fun Shape.toSkiaRect() = SkiaRect(
@@ -100,11 +105,6 @@ private fun <T : Comparable<T>> orderedPair(a: T, b: T ) = if (a < b) {
 }
 
 private fun Float.toKsnUnit() = (this / GRID_WIDTH).toInt()
-
-private fun Offset.toKsnPoint() = Point(
-    x.toKsnUnit(),
-    (y / 2).toKsnUnit()
-)
 
 private data class DataRect(
     val left: Int,
