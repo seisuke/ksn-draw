@@ -19,12 +19,12 @@ class KeyMsg(val key: Key) : Msg {
                     RTreeEntry(id, shape.toRTreeRectangle())
                 }
                 val rtree = model.rtree.delete(entries)
-                val newShapeMap = model.shapes.clone()
+                val mutableShapeMap = model.shapes.toMutableShapeMap()
                 model.selectShapeIdSet.map { id ->
-                    newShapeMap.remove(id)
+                    mutableShapeMap.remove(id)
                 }
                 model.copy(
-                    shapes = newShapeMap,
+                    shapes = mutableShapeMap,
                     rtree = rtree,
                     selectShapeIdSet = emptySet(),
                 ) + None

@@ -27,15 +27,15 @@ class AppModelUpdate : Update<AppModel, Msg, Cmd> {
         is AppModel.ShowSnackBar -> model + AppModel.ShowSnackBarCmd(msg.message, model.snackbarHostState)
         is AppModel.TextBoxUpdate -> {
             val selectedId = model.selectShapeIdSet.first()
-            val newShapes = model.shapes.clone()
-            newShapes.update(selectedId) { shape ->
+            val mutableShapeMap = model.shapes.toMutableShapeMap()
+            mutableShapeMap.update(selectedId) { shape ->
                 if (shape is TextBox) {
                     shape.copy(text = msg.text)
                 } else {
                     null
                 }
             }
-            model.copy(shapes = newShapes) + None
+            model.copy(shapes = mutableShapeMap) + None
         }
         is DragStatus.DragStart -> handleDragStart(model, msg)
         is DragStatus.Drag -> handleDrag(model, msg)

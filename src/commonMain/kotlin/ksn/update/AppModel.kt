@@ -9,6 +9,7 @@ import ksn.ascii.Ascii
 import ksn.ascii.AsciiChar
 import ksn.ascii.Matrix
 import ksn.model.DragType
+import ksn.model.MutableShapeMap
 import ksn.model.ShapeMap
 import ksn.model.Tool
 import ksn.model.shape.Rect
@@ -21,7 +22,7 @@ data class AppModel(
     val title: String,
     val tool: Tool,
     val maxId: AtomicLong,
-    val shapes: ShapeMap = ShapeMap(), // TODO ShapeMap should be immutable. clone should return mutable
+    val shapes: ShapeMap = MutableShapeMap(),
     val selectShapeIdSet: Set<Long> = emptySet(),
     val rtree: RTree<Long, Rectangle> = RTree.create(
         emptyList()

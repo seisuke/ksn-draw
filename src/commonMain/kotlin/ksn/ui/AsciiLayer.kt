@@ -23,9 +23,9 @@ fun AsciiLayer(
         val translateIdList = mutableSetOf<Long>()
 
         // temporary transform for UI
-        val cloneShapeMap = model.shapes.clone()
+        val mutableShapeMap = model.shapes.toMutableShapeMap()
         model.selectShapeIdSet.forEach { id ->
-            cloneShapeMap.update(id) { shape ->
+            mutableShapeMap.update(id) { shape ->
                 when (val dragType = model.dragType) {
                     is DragType.DragMoving -> {
                         translateIdList.add(id)
@@ -38,18 +38,18 @@ fun AsciiLayer(
                     else -> null
                 }
             }
-            cloneShapeMap.updateAllInstance<Line> { (_, line) ->
-                when (val dragType = model.dragType) {
-                    is DragType.DragMoving -> {
-                        line.getConnectIdList().intersect(translateIdList).fold(line) { _: Line, shapeId: Long ->
-                            line.connectTranslate(dragType.point, shapeId)
-                        }
+        }
+        mutableShapeMap.updateAllInstance<Line> { (_, line) ->
+            when (val dragType = model.dragType) {
+                is DragType.DragMoving -> {
+                    line.getConnectIdList().intersect(translateIdList).fold(line) { _: Line, shapeId: Long ->
+                        line.connectTranslate(dragType.point, shapeId)
                     }
-                    else -> null
                 }
+                else -> null
             }
         }
-        cloneShapeMap.values.toList()
+        mutableShapeMap.values.toList()
     }
     val typeface by element.mapAsState(AppModel::typeface)
 

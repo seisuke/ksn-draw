@@ -5,13 +5,33 @@ import ksn.model.shape.Shape
 /**
  * OrderChangeableLinkedHashMap
  */
-class ShapeMap(
-    val map: MutableMap<Long, Shape> = mutableMapOf(),
-    val list: MutableList<Shape> = mutableListOf()
-) : MutableMap<Long, Shape> by map {
+interface ShapeMap : Map<Long, Shape> {
+    val map: Map<Long, Shape>
+    val list: List<Shape>
+
+    override val values: Collection<Shape>
+        get() = list
+
+    fun subMap(keys: Set<Long>): Map<Long, Shape> {
+        return keys.mapNotNull { key ->
+            val value = map[key] ?: return@mapNotNull null
+            key to value
+        }.toMap()
+    }
+
+    fun toMutableShapeMap() : MutableShapeMap = MutableShapeMap(
+        map.toMutableMap(),
+        list.toMutableList()
+    )
+}
+
+class MutableShapeMap(
+    override val map: MutableMap<Long, Shape> = mutableMapOf(),
+    override val list: MutableList<Shape> = mutableListOf()
+) : ShapeMap, MutableMap<Long, Shape> by map {
 
     override val values: MutableCollection<Shape>
-        get() = list
+        get() = map.values
 
     fun add(key: Long, value: Shape, index: Int) {
         val oldValue = map.put(key, value)
@@ -39,13 +59,6 @@ class ShapeMap(
         list.removeAt(index)
         list.add(index, newValue)
         map[key] = newValue
-    }
-
-    fun subMap(keys: Set<Long>): Map<Long, Shape> {
-        return keys.mapNotNull { key ->
-            val value = map[key] ?: return@mapNotNull null
-            key to value
-        }.toMap()
     }
 
     inline fun <reified T : Shape> updateAllInstance(noinline update: (Pair<Long, T>) -> T?) {
@@ -97,9 +110,5 @@ class ShapeMap(
         list.clear()
     }
 
-    fun clone() : ShapeMap = ShapeMap(
-        map.toMutableMap(),
-        list.toMutableList()
-    )
 }
 

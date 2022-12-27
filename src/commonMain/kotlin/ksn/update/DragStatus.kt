@@ -7,6 +7,7 @@ import elm.plus
 import ksn.Constants
 import ksn.model.DragType
 import ksn.model.HandlePosition
+import ksn.model.MutableShapeMap
 import ksn.model.Point
 import ksn.model.RTreeEntry
 import ksn.model.SelectState.Moving
@@ -128,7 +129,7 @@ data class DragStatus(
                         updatedModel
                     } else {
                         val connectIdList = connect.getIdList()
-                        val updatedShapeMap = updateConnectShapeInList(updatedModel.shapes.clone(), connectIdList, lineId)
+                        val updatedShapeMap = updateConnectShapeInList(updatedModel.shapes.toMutableShapeMap(), connectIdList, lineId)
                         updatedModel.copy( shapes = updatedShapeMap)
                     } + None
                 }
@@ -180,7 +181,7 @@ data class DragStatus(
         }
 
         private fun updateConnectShapeInList(
-            shapeMap: ShapeMap,
+            shapeMap: MutableShapeMap,
             connectIdList: List<Long>,
             lineId: Long
         ): ShapeMap {
@@ -232,23 +233,23 @@ data class DragStatus(
         private fun AppModel.returnUpdateModel(id: Long, shape: Shape) = if (shape.isEmpty) {
             this
         } else {
-            val newShapeMap = this.shapes.clone()
-            newShapeMap[id] = shape
+            val mutableShapeMap = this.shapes.toMutableShapeMap()
+            mutableShapeMap[id] = shape
             val rtree = this.rtree.add(
                 RTreeEntry(
                     id,
                     shape.toRTreeRectangle()
                 )
             )
-            this.copy(shapes = newShapeMap, rtree = rtree, dragType = DragType.Zero)
+            this.copy(shapes = mutableShapeMap, rtree = rtree, dragType = DragType.Zero)
         }
 
         private fun moveShapeAndRTree(model: AppModel, dragValue: Point): Pair<ShapeMap, RTree<Long, Rectangle>> {
             val rtreeTranslate = mutableListOf<Translate>()
 
-            val newShapeMap = model.shapes.clone()
+            val mutableShapeMap = model.shapes.toMutableShapeMap()
             model.selectShapeIdSet.forEach { id ->
-                newShapeMap.update(id) { shape ->
+                mutableShapeMap.update(id) { shape ->
                     val newShape = shape.translate(dragValue)
                     rtreeTranslate.add(
                         Translate(
@@ -261,7 +262,7 @@ data class DragStatus(
                 }
             }
             val translateIdList = rtreeTranslate.map { it.id }.toSet()
-            newShapeMap.updateAllInstance<Line> { (id, line) ->
+            mutableShapeMap.updateAllInstance<Line> { (id, line) ->
                 val newLine = line.getConnectIdList().intersect(translateIdList).fold(line) { _: Line, shapeId: Long ->
                     line.connectTranslate(dragValue, shapeId)
                 }
@@ -277,14 +278,14 @@ data class DragStatus(
                 newLine
             }
             val rtree = model.rtree.move(rtreeTranslate)
-            return newShapeMap to rtree
+            return mutableShapeMap to rtree
         }
 
         private fun resizeShapeAndRTree(model: AppModel, dragType: DragType.DragResize): Pair<ShapeMap, RTree<Long, Rectangle>> {
             val rtreeTranslate = mutableListOf<Translate>()
-            val newShapeMap = model.shapes.clone()
+            val mutableShapeMap = model.shapes.toMutableShapeMap()
             model.selectShapeIdSet.forEach { id ->
-                newShapeMap.update(id) { shape ->
+                mutableShapeMap.update(id) { shape ->
                     val newShape = shape.resize(dragType.point, dragType.handlePosition)
                     rtreeTranslate.add(
                         Translate(
@@ -297,7 +298,7 @@ data class DragStatus(
                 }
             }
             val rtree = model.rtree.move(rtreeTranslate)
-            return newShapeMap to rtree
+            return mutableShapeMap to rtree
         }
 
         private fun RTree<Long, Rectangle>.move(
