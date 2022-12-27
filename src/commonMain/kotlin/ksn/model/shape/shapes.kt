@@ -13,6 +13,7 @@ import ksn.model.HandlePosition.RIGHT_MIDDLE
 import ksn.model.HandlePosition.RIGHT_TOP
 import ksn.model.Point
 import ksn.model.plus
+import org.jetbrains.skia.paragraph.Direction
 import kotlin.math.max
 import kotlin.math.min
 
@@ -160,9 +161,9 @@ data class Line(
                 }
             }
             is Connect.Both -> {
-                if (connect.startId == shapeId) {
+                if (connect.start.id == shapeId) {
                     this.copy(start = this.start + point)
-                } else if (connect.endId == shapeId) {
+                } else if (connect.end.id == shapeId) {
                     this.copy(end = this.end + point)
                 } else {
                     this
@@ -178,20 +179,22 @@ data class Line(
         object None : Connect()
         data class Start(
             val id: Long,
+            val handlePosition: HandlePosition
         ) : Connect()
         data class End(
             val id: Long,
+            val handlePosition: HandlePosition
         ) : Connect()
         data class Both(
-            val startId: Long,
-            val endId: Long,
+            val start: Start,
+            val end: End
         ) : Connect()
 
         fun getIdList(): List<Long> {
             return when (this) {
                 is Start -> listOf(this.id)
                 is End -> listOf(this.id)
-                is Both -> listOf(this.startId, this.endId)
+                is Both -> listOf(this.start.id, this.end.id)
                 None -> emptyList()
             }
         }
@@ -214,9 +217,9 @@ data class TextBox(
     )
 }
 
-fun Shape.createAnchorHandle(): List<Point> = listOf(
-    Point(left - 1, verticalCenter),
-    Point(right + 1, verticalCenter),
-    Point(horizontalCenter, top - 1),
-    Point(horizontalCenter, bottom + 1),
+fun Shape.createAnchorHandle(): List<Pair<Point, HandlePosition>> = listOf(
+    Point(left - 1, verticalCenter) to LEFT_MIDDLE,
+    Point(right + 1, verticalCenter) to RIGHT_MIDDLE,
+    Point(horizontalCenter, top - 1) to CENTER_TOP,
+    Point(horizontalCenter, bottom + 1) to CENTER_BOTTOM,
 )

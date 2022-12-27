@@ -200,25 +200,32 @@ data class DragStatus(
         private fun findConnect(model: AppModel, msg: DragEnd): Line.Connect {
             val startId = findConnectShapeId(model, msg.dragStatus.start)
             val endId = findConnectShapeId(model, msg.dragStatus.end)
+            // TODO fix first and second
             return when {
-                startId != null && endId != null -> Line.Connect.Both(startId, endId)
-                startId != null -> Line.Connect.Start(startId)
-                endId != null -> Line.Connect.End(endId)
+                startId != null && endId != null -> Line.Connect.Both(
+                    Line.Connect.Start(startId.first, startId.second),
+                    Line.Connect.End(endId.first, endId.second),
+                )
+                startId != null -> Line.Connect.Start(startId.first, startId.second)
+                endId != null -> Line.Connect.End(endId.first, endId.second)
                 else -> Line.Connect.None
             }
         }
 
-        private fun findConnectShapeId(model: AppModel, point: Point): Long? {
-            val connectShape = model.rtree.search(
+        private fun findConnectShapeId(model: AppModel, point: Point): Pair<Long, HandlePosition>? {
+            val (connectShape, handlePosition) = model.rtree.search(
                 point.toRTreePoint(),
                 Constants.LINE_ANCHOR_DISTANCE
             ).asSequence().mapNotNull { (id, _) ->
                 // TODO need rectangle.createAnchorHandle
                 model.shapes[id]?.withId(id)
-            }.firstOrNull { shape ->
-                shape.shape.createAnchorHandle().contains(point)
-            }
-            return connectShape?.id
+            }.firstNotNullOfOrNull { shape ->
+                val (_, handlePosition) = shape.shape.createAnchorHandle().find { (p, _) ->
+                    p == point
+                } ?: return@firstNotNullOfOrNull null
+                shape to handlePosition
+            } ?: return null
+            return connectShape.id to handlePosition
         }
 
         private fun AppModel.returnUpdateModel(id: Long, shape: Shape) = if (shape.isEmpty) {

@@ -1,5 +1,6 @@
 package ksn.ascii
 
+import ksn.model.HandlePosition
 import ksn.model.Point
 import ksn.model.shape.Line
 import ksn.model.shape.Rect
@@ -15,7 +16,7 @@ class ConnectTest {
         val line1 = Line(
             Point(1, 1),
             Point(6, 3),
-            Line.Connect.End(2)
+            Line.Connect.End(2, HandlePosition.LEFT_MIDDLE)
         )
 
         val rect1 = Rect(

@@ -197,7 +197,7 @@ data class Anchor(
 
 private fun createAnchorHandleList(id: Long, shape: Shape, point: Point): List<Anchor> {
     val handleList = shape.createAnchorHandle()
-    return handleList.map { handle ->
+    return handleList.map { (handle, _) ->
         Anchor(
             id,
             handle,

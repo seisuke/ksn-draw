@@ -21,7 +21,7 @@ data class AppModel(
     val title: String,
     val tool: Tool,
     val maxId: AtomicLong,
-    val shapes: ShapeMap = ShapeMap(),
+    val shapes: ShapeMap = ShapeMap(), // TODO ShapeMap should be immutable. clone should return mutable
     val selectShapeIdSet: Set<Long> = emptySet(),
     val rtree: RTree<Long, Rectangle> = RTree.create(
         emptyList()
