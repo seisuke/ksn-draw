@@ -6,6 +6,7 @@ import elm.Sub
 import elm.plus
 import ksn.Constants
 import ksn.model.DragType
+import ksn.model.HandlePosition
 import ksn.model.Point
 import ksn.model.RTreeEntry
 import ksn.model.SelectState.Moving
@@ -127,7 +128,7 @@ data class DragStatus(
                         updatedModel
                     } else {
                         val connectIdList = connect.getIdList()
-                        val updatedShapeMap = updateConnectShapeInList(updatedModel.shapes, connectIdList, lineId)
+                        val updatedShapeMap = updateConnectShapeInList(updatedModel.shapes.clone(), connectIdList, lineId)
                         updatedModel.copy( shapes = updatedShapeMap)
                     } + None
                 }
@@ -231,7 +232,7 @@ data class DragStatus(
         private fun AppModel.returnUpdateModel(id: Long, shape: Shape) = if (shape.isEmpty) {
             this
         } else {
-            val newShapeMap = this.shapes
+            val newShapeMap = this.shapes.clone()
             newShapeMap[id] = shape
             val rtree = this.rtree.add(
                 RTreeEntry(
@@ -245,7 +246,7 @@ data class DragStatus(
         private fun moveShapeAndRTree(model: AppModel, dragValue: Point): Pair<ShapeMap, RTree<Long, Rectangle>> {
             val rtreeTranslate = mutableListOf<Translate>()
 
-            val newShapeMap = model.shapes
+            val newShapeMap = model.shapes.clone()
             model.selectShapeIdSet.forEach { id ->
                 newShapeMap.update(id) { shape ->
                     val newShape = shape.translate(dragValue)
@@ -281,14 +282,16 @@ data class DragStatus(
 
         private fun resizeShapeAndRTree(model: AppModel, dragType: DragType.DragResize): Pair<ShapeMap, RTree<Long, Rectangle>> {
             val rtreeTranslate = mutableListOf<Translate>()
-            val newShapeMap = model.shapes
+            val newShapeMap = model.shapes.clone()
             model.selectShapeIdSet.forEach { id ->
                 newShapeMap.update(id) { shape ->
                     val newShape = shape.resize(dragType.point, dragType.handlePosition)
-                    Translate(
-                        id,
-                        shape.toRTreeRectangle(),
-                        newShape.toRTreeRectangle()
+                    rtreeTranslate.add(
+                        Translate(
+                            id,
+                            shape.toRTreeRectangle(),
+                            newShape.toRTreeRectangle()
+                        )
                     )
                     newShape
                 }

@@ -27,7 +27,7 @@ class AppModelUpdate : Update<AppModel, Msg, Cmd> {
         is AppModel.ShowSnackBar -> model + AppModel.ShowSnackBarCmd(msg.message, model.snackbarHostState)
         is AppModel.TextBoxUpdate -> {
             val selectedId = model.selectShapeIdSet.first()
-            val newShapes = model.shapes
+            val newShapes = model.shapes.clone()
             newShapes.update(selectedId) { shape ->
                 if (shape is TextBox) {
                     shape.copy(text = msg.text)
