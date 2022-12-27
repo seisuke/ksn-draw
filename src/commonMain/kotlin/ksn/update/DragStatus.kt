@@ -10,6 +10,7 @@ import ksn.model.Point
 import ksn.model.RTreeEntry
 import ksn.model.SelectState.Moving
 import ksn.model.SelectState.Resize
+import ksn.model.ShapeMap
 import ksn.model.Tool
 import ksn.model.minus
 import ksn.model.shape.Line
@@ -57,8 +58,8 @@ data class DragStatus(
                 return model + None
             }
             if (model.selectShapeIdSet.size == 1) {
-                val shape = model.selectedShapes().firstOrNull() ?: return model + None
-                val handlePosition = shape.shape
+                val shape = model.shapes[model.selectShapeIdSet.first()] ?: return model + None
+                val handlePosition = shape
                     .toSkiaRect()
                     .createResizeHandle(10f)
                     .firstOrNull { (rect, _) ->
@@ -126,8 +127,8 @@ data class DragStatus(
                         updatedModel
                     } else {
                         val connectIdList = connect.getIdList()
-                        val updatedShapes = updateConnectShapeInList(updatedModel.shapes, connectIdList, lineId)
-                        updatedModel.copy( shapes = updatedShapes)
+                        val updatedShapeMap = updateConnectShapeInList(updatedModel.shapes, connectIdList, lineId)
+                        updatedModel.copy( shapes = updatedShapeMap)
                     } + None
                 }
                 is Tool.Text -> {
@@ -178,25 +179,22 @@ data class DragStatus(
         }
 
         private fun updateConnectShapeInList(
-            shapeList: List<ShapeWithID>,
+            shapeMap: ShapeMap,
             connectIdList: List<Long>,
             lineId: Long
-        ) = shapeList.map { shapeWithId ->
-            if (connectIdList.contains(shapeWithId.id)) {
-                val shape = shapeWithId.shape
-                if (shape is Rect) {
-                    ShapeWithID(
-                        shapeWithId.id,
+        ): ShapeMap {
+            connectIdList.forEach { id ->
+                shapeMap.update(id) { shape ->
+                    if (shape is Rect) {
                         shape.copy(
                             connectLine = shape.connectLine + listOf(lineId)
                         )
-                    )
-                } else {
-                    shapeWithId
+                    } else {
+                        null
+                    }
                 }
-            } else {
-                shapeWithId
             }
+            return shapeMap
         }
 
         private fun findConnect(model: AppModel, msg: DragEnd): Line.Connect {
@@ -216,9 +214,7 @@ data class DragStatus(
                 Constants.LINE_ANCHOR_DISTANCE
             ).asSequence().mapNotNull { (id, _) ->
                 // TODO need rectangle.createAnchorHandle
-                model.shapes.firstOrNull {
-                    it.id == id
-                }
+                model.shapes[id]?.withId(id)
             }.firstOrNull { shape ->
                 shape.shape.createAnchorHandle().contains(point)
             }
@@ -228,23 +224,23 @@ data class DragStatus(
         private fun AppModel.returnUpdateModel(id: Long, shape: Shape) = if (shape.isEmpty) {
             this
         } else {
-            val shapes = this.addShape(
-                ShapeWithID(id, shape)
-            )
+            val newShapeMap = this.shapes
+            newShapeMap[id] = shape
             val rtree = this.rtree.add(
                 RTreeEntry(
                     id,
                     shape.toRTreeRectangle()
                 )
             )
-            this.copy(shapes = shapes, rtree = rtree, dragType = DragType.Zero)
+            this.copy(shapes = newShapeMap, rtree = rtree, dragType = DragType.Zero)
         }
 
-        private fun moveShapeAndRTree(model: AppModel, dragValue: Point): Pair<List<ShapeWithID>, RTree<Long, Rectangle>> {
+        private fun moveShapeAndRTree(model: AppModel, dragValue: Point): Pair<ShapeMap, RTree<Long, Rectangle>> {
             val rtreeTranslate = mutableListOf<Translate>()
-            val transformShapes = model.shapes.map { shapeWithId ->
-                val (id, shape) = shapeWithId
-                if (model.selectShapeIdSet.contains(id)) {
+
+            val newShapeMap = model.shapes
+            model.selectShapeIdSet.forEach { id ->
+                newShapeMap.update(id) { shape ->
                     val newShape = shape.translate(dragValue)
                     rtreeTranslate.add(
                         Translate(
@@ -253,53 +249,45 @@ data class DragStatus(
                             newShape.toRTreeRectangle()
                         )
                     )
-                    newShape.withId(id)
-                } else {
-                    shapeWithId
+                    newShape
                 }
             }
             val translateIdList = rtreeTranslate.map { it.id }.toSet()
-            val shapes = transformShapes.map{ shapeWithId ->
-                val (id, shape) = shapeWithId
-                if (shape is Line) {
-                    val newShape = shape.getConnectIdList().intersect(translateIdList).fold(shape) { _: Line, id: Long ->
-                        shape.connectTranslate(dragValue, id)
-                    }
+            newShapeMap.updateAllInstance<Line> { (id, line) ->
+                val newLine = line.getConnectIdList().intersect(translateIdList).fold(line) { _: Line, shapeId: Long ->
+                    line.connectTranslate(dragValue, shapeId)
+                }
+                if (newLine != line) {
                     rtreeTranslate.add(
                         Translate(
                             id,
-                            shape.toRTreeRectangle(),
-                            newShape.toRTreeRectangle()
+                            line.toRTreeRectangle(),
+                            newLine.toRTreeRectangle()
                         )
                     )
-                    newShape.withId(id)
-                } else {
-                    shapeWithId
                 }
+                newLine
             }
             val rtree = model.rtree.move(rtreeTranslate)
-            return shapes to rtree
+            return newShapeMap to rtree
         }
 
-        private fun resizeShapeAndRTree(model: AppModel, dragType: DragType.DragResize): Pair<List<ShapeWithID>, RTree<Long, Rectangle>> {
+        private fun resizeShapeAndRTree(model: AppModel, dragType: DragType.DragResize): Pair<ShapeMap, RTree<Long, Rectangle>> {
             val rtreeTranslate = mutableListOf<Translate>()
-            val shapes = model.shapes.map { (id, shape) ->
-                if (model.selectShapeIdSet.contains(id)) {
+            val newShapeMap = model.shapes
+            model.selectShapeIdSet.forEach { id ->
+                newShapeMap.update(id) { shape ->
                     val newShape = shape.resize(dragType.point, dragType.handlePosition)
-                    rtreeTranslate.add(
-                        Translate(
-                            id,
-                            shape.toRTreeRectangle(),
-                            newShape.toRTreeRectangle()
-                        )
+                    Translate(
+                        id,
+                        shape.toRTreeRectangle(),
+                        newShape.toRTreeRectangle()
                     )
-                    ShapeWithID(id, newShape)
-                } else {
-                    ShapeWithID(id, shape)
+                    newShape
                 }
             }
             val rtree = model.rtree.move(rtreeTranslate)
-            return shapes to rtree
+            return newShapeMap to rtree
         }
 
         private fun RTree<Long, Rectangle>.move(

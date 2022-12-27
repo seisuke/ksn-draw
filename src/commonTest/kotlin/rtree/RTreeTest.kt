@@ -52,7 +52,7 @@ class RTreeTest {
         val result3 = tree.search(Point(9,6), 1.1).toList()
         assertEquals(1, result3.size)
         val result4 = tree.search(Point(6,9), 1.1).toList()
-        assertEquals(1, result3.size)
+        assertEquals(1, result4.size)
     }
 
     @Test

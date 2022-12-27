@@ -26,6 +26,7 @@ import ksn.model.DragType
 import ksn.model.HandlePosition
 import ksn.model.Point
 import ksn.model.SelectState
+import ksn.model.ShapeMap
 import ksn.model.Tool
 import ksn.model.shape.Rect
 import ksn.model.shape.Shape
@@ -41,7 +42,6 @@ import ksn.toSkiaRect
 import ksn.update.AppModel
 import ksn.update.DragStatus
 import ksn.update.Msg
-import ksn.update.ShapeWithID
 import org.jetbrains.skia.Color
 import org.jetbrains.skia.Paint
 import org.jetbrains.skia.PaintMode
@@ -109,8 +109,8 @@ fun UiLayer(width: Dp, scale: Float) {
 
 private fun createUiType(
     tool: Tool,
-    shapes: List<ShapeWithID>,
-    selectedShapes: List<ShapeWithID>,
+    shapeMap: ShapeMap,
+    selectedShapes: Map<Long, Shape>,
     dragType: DragType,
     rtree: RTree<Long, Rectangle>,
     skiaDragStatus: SkiaDragStatus,
@@ -153,7 +153,7 @@ private fun createUiType(
     is Tool.Line -> {
         if (skiaDragStatus == SkiaDragStatus.Zero) {
             val point = mouseCursor.toKsnPoint()
-            val anchorList = searchAnchorList(rtree, shapes, point)
+            val anchorList = searchAnchorList(rtree, shapeMap, point)
             listOf(
                 selectedShape(selectedShapes, dragType),
                 LineAnchor(anchorList),
@@ -163,7 +163,7 @@ private fun createUiType(
             val line = dragStatus.toKsnLine()
 
             val point = dragStatus.end
-            val anchorList = searchAnchorList(rtree, shapes, point)
+            val anchorList = searchAnchorList(rtree, shapeMap, point)
             listOf(
                 AsciiLine(line),
                 LineAnchor(anchorList),
@@ -176,15 +176,15 @@ private fun createUiType(
 
 private fun searchAnchorList(
     rtree: RTree<Long, Rectangle>,
-    shapes: List<ShapeWithID>,
+    shapes: ShapeMap,
     point: Point,
 ): List<Anchor> {
     val nearShapeIdList = rtree.search(point.toRTreePoint(), LINE_ANCHOR_DISTANCE)
         .map { (id, _) -> id }
     val anchorList = shapes.filter { (id, shape) ->
         nearShapeIdList.contains(id) && (shape is Rect || shape is TextBox)
-    }.flatMap {
-        createAnchorHandleList(it, point)
+    }.flatMap { (id, shape) ->
+        createAnchorHandleList(id, shape, point)
     }
     return anchorList
 }
@@ -195,11 +195,11 @@ data class Anchor(
     val isSelect: Boolean,
 )
 
-private fun createAnchorHandleList(shapeWithID: ShapeWithID, point: Point): List<Anchor> {
-    val handleList = shapeWithID.shape.createAnchorHandle()
+private fun createAnchorHandleList(id: Long, shape: Shape, point: Point): List<Anchor> {
+    val handleList = shape.createAnchorHandle()
     return handleList.map { handle ->
         Anchor(
-            shapeWithID.id,
+            id,
             handle,
             handle == point
         )
@@ -219,11 +219,13 @@ private fun createResizeHandleList(rect: SkiaRect, selectHandlePosition: HandleP
 }
 
 private fun selectedShape(
-    shapes: List<ShapeWithID>,
+    shapes: Map<Long, Shape>,
     dragType: DragType
 ): SelectedShape {
     return SelectedShape(
-        shapes.map { it.shape.drag(dragType).toSkiaRect() }
+        shapes.map { (_, shape) ->
+            shape.drag(dragType).toSkiaRect()
+        }
     )
 }
 

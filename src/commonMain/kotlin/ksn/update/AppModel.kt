@@ -9,6 +9,7 @@ import ksn.ascii.Ascii
 import ksn.ascii.AsciiChar
 import ksn.ascii.Matrix
 import ksn.model.DragType
+import ksn.model.ShapeMap
 import ksn.model.Tool
 import ksn.model.shape.Rect
 import ksn.model.shape.Shape
@@ -20,7 +21,7 @@ data class AppModel(
     val title: String,
     val tool: Tool,
     val maxId: AtomicLong,
-    val shapes: List<ShapeWithID> = emptyList(), // TODO should be TreeMap
+    val shapes: ShapeMap = ShapeMap(),
     val selectShapeIdSet: Set<Long> = emptySet(),
     val rtree: RTree<Long, Rectangle> = RTree.create(
         emptyList()
@@ -41,22 +42,7 @@ data class AppModel(
     data class ShowSnackBarCmd(val message: String, val snackbarHostState: SnackbarHostState): Cmd
     data class ShowTextFieldCmd(val rect: Rect, val inputTextFieldHostState: SnackbarHostState): Cmd
 
-    /**
-     * Mutable method. Returns list of [AppModel.shapes] plus [shape]
-     */
-    fun addShape(shapeWithID: ShapeWithID): List<ShapeWithID> {
-        return shapes + shapeWithID
-    }
-
-    fun selectedShapes(): List<ShapeWithID> {
-        if (selectShapeIdSet.isEmpty()) {
-            return emptyList()
-        }
-
-        return shapes.filter { shape ->
-            selectShapeIdSet.contains(shape.id)
-        }
-    }
+    fun selectedShapes() = shapes.subMap(selectShapeIdSet)
 
     fun exportClipBoard(clipBoard: ClipboardManager) {
         val maxRectangle = this.rtree.mbr() ?: return
@@ -68,7 +54,7 @@ data class AppModel(
                 AsciiChar.Space
             )
         )
-        ascii.mergeToMatrix(this.shapes.map(ShapeWithID::shape))
+        ascii.mergeToMatrix(this.shapes.values.toList())
         val output = ascii.render {
             when(it) {
                 is AsciiChar.Emoji -> { it.emoji.emoji }

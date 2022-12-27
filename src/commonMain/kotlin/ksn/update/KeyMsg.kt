@@ -19,11 +19,12 @@ class KeyMsg(val key: Key) : Msg {
                     RTreeEntry(id, shape.toRTreeRectangle())
                 }
                 val rtree = model.rtree.delete(entries)
-                val shapes = model.shapes.filter { shape ->
-                    !model.selectShapeIdSet.contains(shape.id)
+                val newShapeMap = model.shapes
+                model.selectShapeIdSet.map { id ->
+                    newShapeMap.remove(id)
                 }
                 model.copy(
-                    shapes = shapes,
+                    shapes = newShapeMap,
                     rtree = rtree,
                     selectShapeIdSet = emptySet(),
                 ) + None

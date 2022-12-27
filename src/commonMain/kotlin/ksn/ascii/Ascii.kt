@@ -9,8 +9,8 @@ class Ascii(
         transform: (AsciiChar) -> String
     ): List<String> = matrix.joinToString(transform = transform)
 
-    fun mergeToMatrix(shapes: List<Shape>) {
-        shapes.forEach { shape ->
+    fun mergeToMatrix(shapeList: List<Shape>) {
+        shapeList.forEach { shape ->
             val partAscii = shape.toAsciiMatrix()
             matrix.merge(partAscii, shape.left, shape.top)
         }

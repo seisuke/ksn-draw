@@ -54,14 +54,14 @@ private fun toAsciiMatrix(textBox: TextBox): Matrix<AsciiChar> {
                     offset = 0
                     x = 1
                     y++
-                    return@forEach
+                } else {
+                    matrix.set(x + offset, y, AsciiChar.Char(char.toString(), char.isFullWidth()))
+                    if (char.isFullWidth()) {
+                        offset++
+                        matrix.set(x + offset, y, AsciiChar.FullWidthSpace)
+                    }
+                    x++
                 }
-                matrix.set( x + offset, y, AsciiChar.Char(char.toString(), char.isFullWidth()))
-                if (char.isFullWidth()) {
-                    offset++
-                    matrix.set( x + offset, y, AsciiChar.FullWidthSpace)
-                }
-                x++
             }
         }
     }

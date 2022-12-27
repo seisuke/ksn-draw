@@ -11,8 +11,6 @@ import ksn.model.DragType
 import ksn.model.shape.Line
 import ksn.model.shape.Shape
 import ksn.update.AppModel
-import ksn.update.ShapeWithID
-import ksn.update.withId
 
 @Composable
 fun AsciiLayer(
@@ -23,13 +21,35 @@ fun AsciiLayer(
     val element = ModelElement.current
     val shapes by element.mapAsState { model ->
         val translateIdList = mutableSetOf<Long>()
+
         // temporary transform for UI
-        model.shapes.map {
-            // TODO move to Shape#drag
-            transformShapes(model, it, translateIdList)
-        }.map { (_, shape) ->
-            transformLines(model, shape, translateIdList)
+        val cloneShapeMap = model.shapes.clone()
+        model.selectShapeIdSet.forEach { id ->
+            cloneShapeMap.update(id) { shape ->
+                when (val dragType = model.dragType) {
+                    is DragType.DragMoving -> {
+                        translateIdList.add(id)
+                        shape.translate(dragType.point)
+                    }
+                    is DragType.DragResize -> shape.resize(
+                        dragType.point,
+                        dragType.handlePosition
+                    )
+                    else -> null
+                }
+            }
+            cloneShapeMap.updateAllInstance<Line> { (_, line) ->
+                when (val dragType = model.dragType) {
+                    is DragType.DragMoving -> {
+                        line.getConnectIdList().intersect(translateIdList).fold(line) { _: Line, shapeId: Long ->
+                            line.connectTranslate(dragType.point, shapeId)
+                        }
+                    }
+                    else -> null
+                }
+            }
         }
+        cloneShapeMap.values.toList()
     }
     val typeface by element.mapAsState(AppModel::typeface)
 
@@ -49,33 +69,6 @@ fun AsciiLayer(
             ascii,
             scale
         )
-    }
-}
-
-/**
- * caution: update translateIdList
- */
-private fun transformShapes(
-    model: AppModel,
-    shapeWithId: ShapeWithID,
-    translateIdList: MutableSet<Long>
-): ShapeWithID {
-    val id = shapeWithId.id
-    return if (model.selectShapeIdSet.contains(id)) {
-        when (val dragType = model.dragType) {
-            is DragType.DragMoving -> {
-                translateIdList.add(id)
-                shapeWithId.shape.translate(dragType.point).withId(id)
-            }
-            is DragType.DragResize -> shapeWithId.shape.resize(
-                dragType.point,
-                dragType.handlePosition
-            ).withId(id)
-
-            else -> shapeWithId
-        }
-    } else {
-        shapeWithId
     }
 }
 
