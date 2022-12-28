@@ -41,7 +41,11 @@ fun AsciiLayer(
                 }
             }
         }
-        mutableShapeMap.updateAllInstance<Line> { (_, line) ->
+        mutableShapeMap.updateAllInstance<Line> { (id, line) ->
+            if (translateIdList.contains(id)) {
+                return@updateAllInstance null
+            }
+
             line.getConnectIdList().intersect(translateIdList).fold(line) { _: Line, shapeId: Long ->
                 when (val dragType = model.dragType) {
                     is DragType.DragMoving -> {

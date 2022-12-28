@@ -143,7 +143,6 @@ data class DragStatus(
                 }
                 is Tool.Select -> when (model.tool.state) {
                     is Moving -> {
-                        // TODO remove connect when move 'list'
                         val (shapes, rtree) = moveShapeAndRTree(model, msg.dragStatus.dragValue)
                         model.copy(
                             tool = Tool.Select(),
@@ -263,6 +262,9 @@ data class DragStatus(
             }
             val translateIdList = rtreeTranslate.map { it.id }.toSet()
             mutableShapeMap.updateAllInstance<Line> { (id, line) ->
+                if (translateIdList.contains(id)) {
+                    return@updateAllInstance line.copy(connect = Line.Connect.None)
+                }
                 val newLine = line.getConnectIdList().intersect(translateIdList).fold(line) { _: Line, shapeId: Long ->
                     line.connectTranslate(dragValue, shapeId)
                 }
@@ -299,6 +301,9 @@ data class DragStatus(
             }
             val translateIdList = rtreeTranslate.map { it.id }.toSet()
             mutableShapeMap.updateAllInstance<Line> { (id, line) ->
+                if (translateIdList.contains(id)) {
+                    return@updateAllInstance null
+                }
                 val newLine = line.getConnectIdList().intersect(translateIdList).fold(line) { _: Line, shapeId: Long ->
                     val shape = mutableShapeMap[shapeId] ?: return@fold line
                     line.connectResize(shapeId, shape)
