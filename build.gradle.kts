@@ -15,7 +15,7 @@ buildscript {
 plugins {
     val kotlinVersion = "1.7.20"
     kotlin("multiplatform") version kotlinVersion
-    id("org.jetbrains.compose") version "1.2.1"
+    id("org.jetbrains.compose") version "1.2.2"
 }
 
 repositories {
@@ -39,7 +39,7 @@ kotlin {
                 implementation(compose.foundation)
                 implementation(compose.material)
                 implementation(compose.runtime)
-                implementation("org.jetbrains.kotlinx:atomicfu:0.17.3")
+                implementation("org.jetbrains.kotlinx:atomicfu:0.18.5")
                 implementation("io.github.seisuke:kemoji:0.2.0")
             }
         }
@@ -47,7 +47,7 @@ kotlin {
         val commonTest by getting {
             dependencies {
                 implementation(kotlin("test"))
-                implementation("io.mockk:mockk-common:1.12.4")
+                implementation("io.mockk:mockk-common:1.12.5")
             }
         }
 
