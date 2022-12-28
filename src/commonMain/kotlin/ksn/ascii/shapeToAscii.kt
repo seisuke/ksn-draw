@@ -4,6 +4,7 @@ import io.github.seisuke.kemoji.EmojiParser
 import io.github.seisuke.kemoji.TextOrSpan
 import ksn.model.Point
 import ksn.model.minus
+import ksn.model.plus
 import ksn.model.shape.Line
 import ksn.model.shape.Rect
 import ksn.model.shape.Shape
@@ -70,9 +71,12 @@ private fun toAsciiMatrix(textBox: TextBox): Matrix<AsciiChar> {
 
 private fun toAsciiMatrix(line: Line): Matrix<AsciiChar> {
     val matrix = Matrix.init<AsciiChar>(line.width, line.height, AsciiChar.Transparent)
-    val landscape = line.width > line.height
-    val boundingList = line.toPointList(landscape)
-        .toBoundingPointsList()
+    val boundingList = if (line.connect != Line.Connect.None) {
+        line.toPointListForConnect()
+    } else {
+        val landscape = line.width > line.height
+        line.toPointList(landscape)
+    }.toBoundingPointsList()
         .map(::toBounding)
     val boxDrawing = boundingList.complementStroke() + boundingList.last()
 
@@ -80,21 +84,22 @@ private fun toAsciiMatrix(line: Line): Matrix<AsciiChar> {
         matrix.set(point.x, point.y, AsciiChar.Bounding(boundingType))
     }
 
-    val point = boxDrawing.last().point
-    val triangle = if (line.width > line.height) {
-        if (point.x == 0) {
-            Triangle.LEFT_TRIANGLE
-        } else {
+    val preLastPoint = boxDrawing[boxDrawing.lastIndex - 1].point
+    val lastPoint = boxDrawing.last().point
+    val triangle = if (preLastPoint.y == lastPoint.y) {
+        if (preLastPoint.x < lastPoint.x) {
             Triangle.RIGHT_TRIANGLE
+        } else {
+            Triangle.LEFT_TRIANGLE
         }
     } else {
-        if (point.y == 0) {
-            Triangle.UP_TRIANGLE
-        } else {
+        if (preLastPoint.y < lastPoint.y) {
             Triangle.DOWN_TRIANGLE
+        } else {
+            Triangle.UP_TRIANGLE
         }
     }
-    matrix.set(point.x, point.y, AsciiChar.Char(triangle.char))
+    matrix.set(lastPoint.x, lastPoint.y, AsciiChar.Char(triangle.char))
     return matrix
 }
 
@@ -112,13 +117,23 @@ private fun Rect.toPointList(): List<Point> {
     )
 }
 
-private fun Line.toPointList(landscape: Boolean): List<Point> {
-    val split = if (landscape) {
+private fun Line.toPointListForConnect(): List<Point> {
+    val offsetStart = start - Point(left, top)
+    val offsetEnd = end - Point(left, top)
+    val p2 = offsetStart + this.connect.startPoint()
+    val p3 = offsetEnd + this.connect.endPoint()
+    val line = Line(p2, p3)
+    val horizontal = offsetStart.x == p2.x
+    return listOf(offsetStart) + line.toPointList(horizontal).map { it + p2 } + offsetEnd
+}
+
+private fun Line.toPointList(startDirectionHorizontal: Boolean): List<Point> {
+    val split = if (startDirectionHorizontal) {
         ceil(width / 2f).toInt() - 1
     } else {
         ceil(height / 2f).toInt() - 1
     }
-    val (p2, p3) = if (landscape) {
+    val (p2, p3) = if (startDirectionHorizontal) {
         Point(split, 0) to Point(split, height - 1)
     } else {
         Point(0, split) to Point(width - 1, split)
@@ -126,7 +141,7 @@ private fun Line.toPointList(landscape: Boolean): List<Point> {
     val offsetStart = start - Point(left, top)
     val offsetEnd = end - Point(left, top)
 
-    return if (landscape) {
+    return if (startDirectionHorizontal) {
         if ((start.x > end.x && start.y > end.y) || (start.x < end.x && start.y > end.y)) {
             listOf(offsetStart, p3, p2, offsetEnd)
         } else {

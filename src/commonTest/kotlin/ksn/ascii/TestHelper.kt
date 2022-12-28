@@ -1,6 +1,7 @@
 package ksn.ascii
 
 import ksn.model.shape.Shape
+import kotlin.test.DefaultAsserter.assertTrue
 
 object TestHelper {
 
@@ -13,5 +14,12 @@ object TestHelper {
         val ascii = Ascii(matrix)
         ascii.mergeToMatrix(shapes)
         return ascii.matrix.joinToString { it.value }.joinToString("\n")
+    }
+
+    fun <T> assertAscii(expected: T, actual: T) {
+        assertTrue(
+            { "Expected\n$expected\n----\nActual\n$actual\n----" },
+            actual == expected
+        )
     }
 }

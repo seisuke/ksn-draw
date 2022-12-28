@@ -13,8 +13,6 @@ import ksn.model.HandlePosition.RIGHT_MIDDLE
 import ksn.model.HandlePosition.RIGHT_TOP
 import ksn.model.Point
 import ksn.model.plus
-import kotlin.math.max
-import kotlin.math.min
 
 sealed interface Shape {
     val left: Int
@@ -124,11 +122,30 @@ data class Line(
     val end: Point,
     val connect: Connect = Connect.None
 ): Shape {
-    // TODO add another pattern when line connect with shape
-    override val left: Int = min(start.x, end.x)
-    override val top: Int = min(start.y, end.y)
-    override val right: Int = max(start.x, end.x)
-    override val bottom: Int = max(start.y, end.y)
+    override val left: Int = minOf(
+        start.x,
+        start.x + connect.startPoint().x,
+        end.x + connect.endPoint().x,
+        end.x
+    )
+    override val top: Int = minOf(
+        start.y,
+        start.y + connect.startPoint().y,
+        end.y + connect.endPoint().y,
+        end.y
+    )
+    override val right: Int = maxOf(
+        start.x,
+        start.x + connect.startPoint().x,
+        end.x + connect.endPoint().x,
+        end.x
+    )
+    override val bottom: Int = maxOf(
+        start.y,
+        start.y + connect.startPoint().y,
+        end.y + connect.endPoint().y,
+        end.y
+    )
     override val connectLine: List<Long>
         get() = emptyList()
 
@@ -222,19 +239,9 @@ data class Line(
     }
 
     sealed class Connect {
-        object None : Connect()
-        data class Start(
-            val id: Long,
-            val handlePosition: HandlePosition
-        ) : Connect()
-        data class End(
-            val id: Long,
-            val handlePosition: HandlePosition
-        ) : Connect()
-        data class Both(
-            val start: Start,
-            val end: End
-        ) : Connect()
+
+        open fun startPoint(): Point = Point.Zero
+        open fun endPoint(): Point = Point.Zero
 
         fun getIdList(): List<Long> {
             return when (this) {
@@ -243,6 +250,35 @@ data class Line(
                 is Both -> listOf(this.start.id, this.end.id)
                 None -> emptyList()
             }
+        }
+
+        protected fun calcPoint(handlePosition: HandlePosition): Point = when (handlePosition) {
+            CENTER_TOP -> Point(0, -1)
+            CENTER_BOTTOM -> Point(0, 1)
+            LEFT_MIDDLE -> Point(-1, 0)
+            RIGHT_MIDDLE -> Point(1, 0)
+            else -> Point.Zero
+        }
+
+        object None : Connect()
+        data class Start(
+            val id: Long,
+            val handlePosition: HandlePosition
+        ) : Connect() {
+            override fun startPoint() = calcPoint(handlePosition)
+        }
+        data class End(
+            val id: Long,
+            val handlePosition: HandlePosition
+        ) : Connect() {
+            override fun endPoint() = calcPoint(handlePosition)
+        }
+        data class Both(
+            val start: Start,
+            val end: End
+        ) : Connect() {
+            override fun startPoint() = start.startPoint()
+            override fun endPoint() = end.endPoint()
         }
     }
 }

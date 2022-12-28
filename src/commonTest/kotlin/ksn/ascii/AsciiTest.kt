@@ -1,11 +1,11 @@
 package ksn.ascii
 
+import ksn.ascii.TestHelper.assertAscii
 import ksn.ascii.TestHelper.convertTextList
 import ksn.model.Point
 import ksn.model.shape.Line
 import ksn.model.shape.Rect
 import kotlin.test.Test
-import kotlin.test.assertEquals
 
 class AsciiTest {
     @Test
@@ -14,15 +14,15 @@ class AsciiTest {
             Point(2, 6),
             Point(7, 8),
         )
-        val text = convertTextList(line)
+        val actual = convertTextList(line)
 
-        assertEquals(
+        assertAscii(
             listOf(
                 "──┐   ",
                 "  │   ",
                 "  └──▶"
             ),
-            text,
+            actual,
         )
     }
 
@@ -32,8 +32,8 @@ class AsciiTest {
             Point(2, 8),
             Point(7, 3),
         )
-        val text = convertTextList(line)
-        assertEquals(
+        val actual = convertTextList(line)
+        assertAscii(
             listOf(
                 "     ▲",
                 "     │",
@@ -42,7 +42,7 @@ class AsciiTest {
                 "│     ",
                 "│     ",
             ),
-            text,
+            actual,
         )
     }
 
@@ -52,8 +52,8 @@ class AsciiTest {
             Point(7, 8),
             Point(2, 3),
         )
-        val text = convertTextList(line)
-        assertEquals(
+        val actual = convertTextList(line)
+        assertAscii(
             listOf(
                 "▲     ",
                 "│     ",
@@ -62,7 +62,7 @@ class AsciiTest {
                 "     │",
                 "     │",
             ),
-            text,
+            actual,
         )
     }
 
@@ -72,8 +72,8 @@ class AsciiTest {
             Point(7, 3),
             Point(2, 8),
         )
-        val text = convertTextList(line)
-        assertEquals(
+        val actual = convertTextList(line)
+        assertAscii(
             listOf(
                 "     │",
                 "     │",
@@ -82,7 +82,7 @@ class AsciiTest {
                 "│     ",
                 "▼     ",
             ),
-            text,
+            actual,
         )
     }
 
@@ -92,13 +92,13 @@ class AsciiTest {
             Point(4, 7),
             Point(7, 7),
         )
-        val text = convertTextList(line)
+        val actual = convertTextList(line)
 
-        assertEquals(
+        assertAscii(
             listOf(
                 "───▶",
             ),
-            text,
+            actual,
         )
     }
 
@@ -108,15 +108,15 @@ class AsciiTest {
             Point(4, 6),
             Point(4, 4),
         )
-        val text = convertTextList(line)
+        val actual = convertTextList(line)
 
-        assertEquals(
+        assertAscii(
             listOf(
                 "▲",
                 "│",
                 "│",
             ),
-            text,
+            actual,
         )
     }
 
@@ -128,22 +128,23 @@ class AsciiTest {
             4,
             1
         )
-
-        val ascii = Ascii(
-            Matrix.init(5, 5, AsciiChar.Transparent)
+        val actual = convertTextList(
+            listOf(rect),
+            5,
+            5,
         )
-        ascii.mergeToMatrix(listOf(rect))
-        val text = ascii.matrix.joinToString { it.value }
+        val expect =
+            """|  │ │ 
+               |  └─┘ 
+               |      
+               |      
+               |      
+               |      
+            """.trimMargin()
 
-        assertEquals(
-            listOf(
-                "  │ │",
-                "  └─┘",
-                "     ",
-                "     ",
-                "     ",
-            ),
-            text,
+        assertAscii(
+            expect,
+            actual,
         )
     }
 }
