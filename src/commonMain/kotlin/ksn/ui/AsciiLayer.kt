@@ -9,7 +9,6 @@ import ksn.ascii.Ascii
 import ksn.ascii.AsciiRenderer
 import ksn.model.DragType
 import ksn.model.shape.Line
-import ksn.model.shape.Shape
 import ksn.update.AppModel
 
 @Composable
@@ -31,22 +30,29 @@ fun AsciiLayer(
                         translateIdList.add(id)
                         shape.translate(dragType.point)
                     }
-                    is DragType.DragResize -> shape.resize(
-                        dragType.point,
-                        dragType.handlePosition
-                    )
+                    is DragType.DragResize -> {
+                        translateIdList.add(id)
+                        shape.resize(
+                            dragType.point,
+                            dragType.handlePosition
+                        )
+                    }
                     else -> null
                 }
             }
         }
         mutableShapeMap.updateAllInstance<Line> { (_, line) ->
-            when (val dragType = model.dragType) {
-                is DragType.DragMoving -> {
-                    line.getConnectIdList().intersect(translateIdList).fold(line) { _: Line, shapeId: Long ->
+            line.getConnectIdList().intersect(translateIdList).fold(line) { _: Line, shapeId: Long ->
+                when (val dragType = model.dragType) {
+                    is DragType.DragMoving -> {
                         line.connectTranslate(dragType.point, shapeId)
                     }
+                    is DragType.DragResize -> {
+                        val shape = mutableShapeMap[shapeId] ?: return@fold line
+                        line.connectResize(shapeId, shape)
+                    }
+                    else -> line
                 }
-                else -> null
             }
         }
         mutableShapeMap.values.toList()
@@ -70,21 +76,4 @@ fun AsciiLayer(
             scale
         )
     }
-}
-
-private fun transformLines(
-    model: AppModel,
-    shape: Shape,
-    translateIdList: Set<Long>
-) = if (shape is Line) {
-    when (val dragType = model.dragType) {
-        is DragType.DragMoving -> {
-            shape.getConnectIdList().intersect(translateIdList).fold(shape) { _: Line, id: Long ->
-                shape.connectTranslate(dragType.point, id)
-            }
-        }
-        else -> shape
-    }
-} else {
-    shape
 }

@@ -13,7 +13,6 @@ import ksn.model.HandlePosition.RIGHT_MIDDLE
 import ksn.model.HandlePosition.RIGHT_TOP
 import ksn.model.Point
 import ksn.model.plus
-import org.jetbrains.skia.paragraph.Direction
 import kotlin.math.max
 import kotlin.math.min
 
@@ -145,7 +144,7 @@ data class Line(
     fun getConnectIdList(): List<Long> = connect.getIdList()
 
     fun connectTranslate(point: Point, shapeId: Long): Line {
-        return when (val connect= connect) {
+        return when (val connect = connect) {
             is Connect.Start -> {
                 if (connect.id == shapeId) {
                     this.copy(start = this.start + point)
@@ -173,7 +172,54 @@ data class Line(
         }
     }
 
+    fun connectResize(shapeId: Long, shape: Shape): Line {
+        val anchorHandleList = shape.createAnchorHandle()
+        val connectList = when (val connect = connect) {
+            is Connect.Start -> listOf(connect)
+            is Connect.End -> listOf(connect)
+            is Connect.Both -> listOf(connect.start, connect.end)
+            is Connect.None -> emptyList()
+        }
+        return connectList.fold(this) { acc, connect ->
+            when (connect) {
+                is Connect.Start -> {
+                    val connectPoint = findMoveConnectPoint(
+                        connect.id,
+                        shapeId,
+                        connect.handlePosition,
+                        anchorHandleList
+                    ) ?: return@fold acc
+                    acc.copy(start = connectPoint)
+                }
+                is Connect.End -> {
+                    val connectPoint = findMoveConnectPoint(
+                        connect.id,
+                        shapeId,
+                        connect.handlePosition,
+                        anchorHandleList
+                    ) ?: return@fold acc
+                    acc.copy(end = connectPoint)
+                }
+                else -> acc
+            }
+        }
+    }
+
     override fun resize(point: Point, handlePosition: HandlePosition): Shape = this
+
+    private fun findMoveConnectPoint(
+        connectId: Long,
+        shapeId: Long,
+        connectHandlePosition: HandlePosition,
+        anchorHandleList: List<Pair<Point, HandlePosition>>
+    ): Point? = if (connectId == shapeId) {
+        val anchorHandle = anchorHandleList.firstOrNull { (_, handlePosition) ->
+            connectHandlePosition == handlePosition
+        }
+        anchorHandle?.first
+    } else {
+        null
+    }
 
     sealed class Connect {
         object None : Connect()

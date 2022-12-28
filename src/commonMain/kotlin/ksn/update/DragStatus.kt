@@ -297,6 +297,23 @@ data class DragStatus(
                     newShape
                 }
             }
+            val translateIdList = rtreeTranslate.map { it.id }.toSet()
+            mutableShapeMap.updateAllInstance<Line> { (id, line) ->
+                val newLine = line.getConnectIdList().intersect(translateIdList).fold(line) { _: Line, shapeId: Long ->
+                    val shape = mutableShapeMap[shapeId] ?: return@fold line
+                    line.connectResize(shapeId, shape)
+                }
+                if (newLine != line) {
+                    rtreeTranslate.add(
+                        Translate(
+                            id,
+                            line.toRTreeRectangle(),
+                            newLine.toRTreeRectangle()
+                        )
+                    )
+                }
+                newLine
+            }
             val rtree = model.rtree.move(rtreeTranslate)
             return mutableShapeMap to rtree
         }
