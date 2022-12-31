@@ -279,6 +279,17 @@ data class Line(
         ) : Connect() {
             override fun startPoint() = start.startPoint()
             override fun endPoint() = end.endPoint()
+
+            fun reverse() = Both(
+                start = Start(
+                    id = end.id,
+                    handlePosition = end.handlePosition
+                ),
+                end = End(
+                    id = start.id,
+                    handlePosition = start.handlePosition
+                )
+            )
         }
     }
 }

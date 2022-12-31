@@ -2,6 +2,10 @@ package ksn.ascii
 
 import io.github.seisuke.kemoji.EmojiParser
 import io.github.seisuke.kemoji.TextOrSpan
+import ksn.model.HandlePosition.CENTER_BOTTOM
+import ksn.model.HandlePosition.CENTER_TOP
+import ksn.model.HandlePosition.LEFT_MIDDLE
+import ksn.model.HandlePosition.RIGHT_MIDDLE
 import ksn.model.Point
 import ksn.model.minus
 import ksn.model.plus
@@ -10,6 +14,7 @@ import ksn.model.shape.Rect
 import ksn.model.shape.Shape
 import ksn.model.shape.TextBox
 import kotlin.math.ceil
+import kotlin.math.min
 
 fun Shape.toAsciiMatrix(): Matrix<AsciiChar> = when (this) {
     is Rect -> toAsciiMatrix(this)
@@ -71,13 +76,21 @@ private fun toAsciiMatrix(textBox: TextBox): Matrix<AsciiChar> {
 
 private fun toAsciiMatrix(line: Line): Matrix<AsciiChar> {
     val matrix = Matrix.init<AsciiChar>(line.width, line.height, AsciiChar.Transparent)
-    val boundingList = if (line.connect != Line.Connect.None) {
+    val boundingList = if (line.connect is Line.Connect.Both) {
+        //TODO cover Connect.Start and Connect.End patterns
         line.toPointListForConnect()
     } else {
         val landscape = line.width > line.height
         line.toPointList(landscape)
-    }.toBoundingPointsList()
-        .map(::toBounding)
+    }.let {
+        try {
+            it.toBoundingPointsList().map(::toBounding)
+        } catch (e: IllegalArgumentException) {
+            println("${e.message} \n${it.joinToString("\n")}")
+            throw e
+        }
+    }
+
     val boxDrawing = boundingList.complementStroke() + boundingList.last()
 
     boxDrawing.forEach { (point, boundingType) ->
@@ -122,9 +135,28 @@ private fun Line.toPointListForConnect(): List<Point> {
     val offsetEnd = end - Point(left, top)
     val p2 = offsetStart + this.connect.startPoint()
     val p3 = offsetEnd + this.connect.endPoint()
+
+    if (connect is Line.Connect.Both) {
+        val middlePoint = getMiddlePointIfDirect(connect, offsetStart, offsetEnd)
+        if (middlePoint != null) {
+            return listOf(offsetStart, middlePoint, offsetEnd)
+        }
+
+        val list = sideToTop(connect, offsetStart, offsetEnd)
+        if (list.isNotEmpty()) {
+            return list
+        }
+
+        val list2 = faceToFace(connect)
+        if (list2.isNotEmpty()) {
+            return list2
+        }
+    }
+
     val line = Line(p2, p3)
+    val middleOffsetPoint = Point(min(p2.x, p3.x),min(p2.y, p3.y))
     val horizontal = offsetStart.x == p2.x
-    return listOf(offsetStart) + line.toPointList(horizontal).map { it + p2 } + offsetEnd
+    return listOf(offsetStart) + line.toPointList(horizontal).map { it + middleOffsetPoint } + offsetEnd
 }
 
 private fun Line.toPointList(startDirectionHorizontal: Boolean): List<Point> {
@@ -153,6 +185,88 @@ private fun Line.toPointList(startDirectionHorizontal: Boolean): List<Point> {
         } else {
             listOf(offsetStart, p2, p3, offsetEnd)
         }
+    }
+}
+
+private fun sideToTop(
+    connect: Line.Connect.Both,
+    start: Point,
+    end: Point,
+    reversed: Boolean = false
+): List<Point> {
+    val p3 = end + connect.endPoint()
+
+    if (connect.start.handlePosition == RIGHT_MIDDLE || connect.start.handlePosition == LEFT_MIDDLE) {
+        if (start.x < end.x) {
+            val line = Line(start, p3)
+            return line.toPointList(true) + end
+        }
+    } else if (!reversed) {
+        return sideToTop(connect.reverse(), end, start, true).reversed()
+    }
+
+    return emptyList()
+}
+
+private fun Line.faceToFace(connect: Line.Connect.Both): List<Point> {
+    if (connect.start.handlePosition == CENTER_BOTTOM &&
+        connect.end.handlePosition == CENTER_TOP &&
+        start.y < end.y
+    ) {
+        return this.toPointList(false)
+    }
+    if (connect.start.handlePosition == CENTER_TOP &&
+        connect.end.handlePosition == CENTER_BOTTOM &&
+        start.y > end.y
+    ) {
+        return this.toPointList(false)
+    }
+    if (connect.start.handlePosition == RIGHT_MIDDLE &&
+        connect.end.handlePosition == LEFT_MIDDLE &&
+        start.x > end.x
+    ) {
+        return this.toPointList(true)
+    }
+    if (connect.start.handlePosition == LEFT_MIDDLE &&
+        connect.end.handlePosition == RIGHT_MIDDLE &&
+        start.x < end.x
+    ) {
+        return this.toPointList(true)
+    }
+    return emptyList()
+}
+
+private fun getMiddlePointIfDirect(
+    connect: Line.Connect.Both,
+    start: Point,
+    end: Point,
+    reversed: Boolean = false
+): Point? {
+    val startConnect = connect.start
+    val endConnect = connect.end
+    return if (
+        (startConnect.handlePosition == RIGHT_MIDDLE &&
+                endConnect.handlePosition == CENTER_TOP &&
+                start.x < end.x &&
+                start.y < end.y) ||
+        (startConnect.handlePosition == RIGHT_MIDDLE &&
+                endConnect.handlePosition == CENTER_BOTTOM &&
+                start.x < end.x &&
+                start.y > end.y) ||
+        (startConnect.handlePosition == LEFT_MIDDLE &&
+                endConnect.handlePosition == CENTER_TOP &&
+                start.x > end.x &&
+                start.y < end.y) ||
+        (startConnect.handlePosition == LEFT_MIDDLE &&
+                endConnect.handlePosition == CENTER_BOTTOM &&
+                start.x > end.x &&
+                start.y > end.y)
+    ) {
+        Point(end.x, start.y)
+    } else if (!reversed) {
+        getMiddlePointIfDirect(connect.reverse(), end, start, true)
+    } else {
+        null
     }
 }
 

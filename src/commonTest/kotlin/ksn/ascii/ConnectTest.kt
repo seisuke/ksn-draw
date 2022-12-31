@@ -140,13 +140,12 @@ class ConnectTest {
             10
         )
 
-        // TODO line shape is still strange
         val expect1 =
             """|           
                |           
                |  ┌─┐      
-               |  │ │─┐    
-               |  └─┘ └──┐ 
+               |  │ │────┐ 
+               |  └─┘    │ 
                |         │ 
                |         │ 
                |         ▼ 
